@@ -1,0 +1,7 @@
+---
+# Main variables for production environment
+environment: production
+ansible_user: summitethic
+
+# Domain configuration
+domain: summitethic.europe

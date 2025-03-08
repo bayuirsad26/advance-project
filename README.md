@@ -11,6 +11,16 @@ This repository contains the enhanced Ansible infrastructure codebase for Summit
 - **CI/CD Integration**: Automated testing and quality checks
 - **Documentation**: Extensive documentation and operational guides
 
+## Prerequisites
+
+- Ansible 2.12 or newer
+- Python 3.9 or newer
+- Required Python packages (install with `pip install -r requirements.txt`):
+  - prettytable (for inventory reporting)
+  - PyYAML
+- Docker and docker-compose-plugin (for containerized services)
+- Terraform 1.0+ (for infrastructure provisioning)
+
 ## Quick Start
 
 1. **Clone the repository**
@@ -37,8 +47,13 @@ This repository contains the enhanced Ansible infrastructure codebase for Summit
    Copy and modify the example inventory files:
 
    ```bash
+   # Create inventory structure from examples
    cp inventories/production/inventory.yml.example inventories/production/inventory.yml
-   cp inventories/production/group_vars/all.yml.example inventories/production/group_vars/all/main.yml
+   mkdir -p inventories/production/group_vars/all
+   cp inventories/production/group_vars/all/main.yml.example inventories/production/group_vars/all/main.yml
+   cp inventories/production/group_vars/all/docker.yml.example inventories/production/group_vars/all/docker.yml
+   cp inventories/production/group_vars/all/security.yml.example inventories/production/group_vars/all/security.yml
+   cp inventories/production/group_vars/all/services.yml.example inventories/production/group_vars/all/services.yml
    cp inventories/production/group_vars/vault.yml.example inventories/production/group_vars/vault.yml
    ```
 
@@ -68,6 +83,15 @@ summitethic-ansible/
 ├── .github/                     # CI/CD workflows
 ├── docs/                        # Comprehensive documentation
 ├── inventories/                 # Environment-specific configurations
+│   └── production/              # Production environment
+│       ├── group_vars/          # Variable definitions
+│       │   ├── all/             # Split variables by category
+│       │   │   ├── main.yml     # Core variables
+│       │   │   ├── docker.yml   # Docker-related variables
+│       │   │   ├── security.yml # Security-related variables
+│       │   │   └── services.yml # Service-specific variables
+│       │   └── vault.yml        # Encrypted sensitive variables
+│       └── inventory.yml        # Main inventory file
 ├── molecule/                    # Testing framework
 ├── playbooks/                   # Task playbooks
 ├── roles/                       # Ansible roles
@@ -76,8 +100,21 @@ summitethic-ansible/
 ├── scripts/                     # Utility scripts
 ├── terraform/                   # Infrastructure as Code
 ├── requirements.yml             # Dependency specifications
+├── requirements.txt             # Python dependencies
 └── Makefile                     # Automation helpers
 ```
+
+## Inventory Structure
+
+This project uses a structured approach to organize variables:
+
+- `inventory.yml` - Main inventory file listing servers and groups
+- `group_vars/all/` - Split variable files by category:
+  - `main.yml` - Core system variables
+  - `docker.yml` - Docker configuration
+  - `security.yml` - Security settings
+  - `services.yml` - Application service parameters
+- `group_vars/vault.yml` - Encrypted sensitive variables
 
 ## Available Playbooks
 
@@ -91,12 +128,31 @@ summitethic-ansible/
 ## Roles
 
 - **common**: Base system configuration
+- **root_setup**: Initial bootstrap process
 - **security**: Comprehensive security hardening
+- **user_setup**: User configuration and SSH setup
 - **traefik**: Reverse proxy setup
 - **mailcow**: Mail server deployment
 - **monitoring**: Observability stack
 - **logging**: Centralized logging
 - **backup**: Backup management
+
+## Troubleshooting
+
+### Common Issues
+
+- **Missing inventory errors**: Ensure you have copied example files to create your inventory structure
+- **Linting failures**: Run `ansible-lint` to identify and fix code style issues
+- **Missing roles or task files**: The project expects certain files like security.yml and monitoring.yml in role directories
+
+For more detailed troubleshooting, see the [Troubleshooting Guide](docs/troubleshooting.md).
+
+## Documentation
+
+- [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute to this project
+- [Inventory Guide](docs/inventory-guide.md) - Detailed explanation of inventory structure
+- [Security Practices](docs/security-practices.md) - Overview of security hardening measures
+- [Linting Guide](docs/linting-guide.md) - Standards and fixes for code quality
 
 ## Contributing
 

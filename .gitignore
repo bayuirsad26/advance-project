@@ -15,6 +15,7 @@ logs/
 # Secrets
 *vault*
 !vault.yml.example
+!update-vault-pass.sh
 id_*
 *.key
 *.pem
@@ -62,3 +63,6 @@ collections/
 # Group vars except examples
 /inventories/**/group_vars/*
 !/inventories/**/group_vars/*.example
+!/inventories/**/group_vars/*/
+/inventories/**/group_vars/*/*
+!/inventories/**/group_vars/*/*.example

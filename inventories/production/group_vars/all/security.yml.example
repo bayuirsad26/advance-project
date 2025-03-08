@@ -1,0 +1,27 @@
+---
+# Security variables for all hosts
+security:
+  # SSH configuration
+  ssh:
+    permit_root_login: "no"
+    password_auth: "no"
+    allow_agent_forwarding: "no"
+    allow_tcp_forwarding: "no"
+    
+  # Firewall configuration
+  firewall:
+    enabled: true
+    default_policy: deny
+    rules:
+      - { port: 22, proto: tcp, rule: allow }
+      - { port: 80, proto: tcp, rule: allow }
+      - { port: 443, proto: tcp, rule: allow }
+      
+  # Audit configuration
+  audit:
+    enabled: true
+    log_level: "INFO"
+    
+  # Compliance standards to enable
+  compliance_standards:
+    - cis

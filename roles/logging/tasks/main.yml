@@ -1,0 +1,81 @@
+---
+- name: Check if Docker is installed
+  ansible.builtin.command: docker --version
+  register: docker_check
+  failed_when: docker_check.rc != 0
+  changed_when: false
+  tags: [logging, check]
+
+- name: Include prerequisites tasks
+  ansible.builtin.import_tasks: prerequisites.yml
+  tags: [logging, prerequisites]
+
+- name: Create Docker network for logging stack
+  community.docker.docker_network:
+    name: "{{ logging_network_name }}"
+    driver: bridge
+    state: present
+  tags: [logging, network]
+
+- name: Include elasticsearch tasks
+  ansible.builtin.import_tasks: elasticsearch.yml
+  tags: [logging, elasticsearch]
+
+- name: Include kibana tasks
+  ansible.builtin.import_tasks: kibana.yml
+  tags: [logging, kibana]
+
+- name: Include logstash tasks
+  ansible.builtin.import_tasks: logstash.yml
+  tags: [logging, logstash]
+
+- name: Include filebeat tasks
+  ansible.builtin.import_tasks: filebeat.yml
+  tags: [logging, filebeat]
+
+- name: Template Docker Compose file
+  ansible.builtin.template:
+    src: templates/docker-compose.logging.yml.j2
+    dest: "{{ logging_base_dir }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, deploy]
+
+- name: Deploy ELK stack using Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ logging_base_dir }}"
+    state: present
+    pull: "always"
+  tags: [logging, deploy]
+
+- name: Wait for Elasticsearch to start
+  ansible.builtin.uri:
+    url: "http://localhost:{{ logging_elasticsearch_port }}"
+    method: GET
+    user: "{{ logging_elastic_user }}"
+    password: "{{ logging_elastic_password }}"
+    force_basic_auth: true
+    status_code: 200
+    timeout: 300
+    delay: 10
+  register: elasticsearch_check
+  retries: 30
+  delay: 10
+  until: elasticsearch_check.status == 200
+  failed_when: false
+  tags: [logging, deploy, verify]
+
+- name: Display ELK stack information
+  ansible.builtin.debug:
+    msg: |
+      ELK Stack has been deployed!
+
+      Access Kibana: https://kibana.{{ logging_domain }}
+
+      Credentials:
+        - Username: {{ logging_elastic_user }}
+        - Password: {{ logging_elastic_password }}
+
+      Note: It may take a few minutes for all services to fully initialize.
+  tags: [logging, deploy, info]

@@ -1,0 +1,27 @@
+---
+# User configuration
+root_setup_admin_user: summitethic
+root_setup_admin_ssh_dir: "/home/{{ root_setup_admin_user }}/.ssh"
+root_setup_admin_public_key: "roles/root_setup/files/id_ed25519_summitethic.pub"
+root_setup_create_admin_user: true
+
+# Security settings
+root_setup_permit_root_login: "no"
+root_setup_password_auth: "no"
+root_setup_password_hash: "{{ vault_root_setup_pass }}"
+
+# System update settings
+root_setup_update_system: true
+root_setup_upgrade_system: true
+root_setup_autoremove: true
+root_setup_reboot_if_needed: true
+
+# SSH configuration
+root_setup_backup_sshd_config: true
+root_setup_ssh_banner_enable: true
+root_setup_ssh_banner_text: |
+  *******************************************************************************
+                      AUTHORIZED ACCESS ONLY
+            This system is the property of SummitEthic
+        All connections are monitored and unauthorized access is prohibited
+  *******************************************************************************

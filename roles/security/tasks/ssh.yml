@@ -1,0 +1,48 @@
+---
+- name: Ensure SSH config directory exists
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    mode: "0755"
+  tags: [security, ssh]
+
+- name: Configure hardened SSH settings
+  ansible.builtin.template:
+    src: templates/sshd_config.j2
+    dest: /etc/ssh/sshd_config.d/10-security.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart SSH
+  tags: [security, ssh]
+
+- name: Ensure SSH PAM configuration is secure
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/sshd
+    regexp: "^\\s*@include\\s+common-auth"
+    line: "@include common-auth"
+    state: present
+  tags: [security, ssh]
+
+- name: Create banner file
+  ansible.builtin.template:
+    src: templates/ssh_banner.j2
+    dest: /etc/issue.net
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [security, ssh]
+
+- name: Verify SSH configuration
+  ansible.builtin.shell: set -o pipefail && ssh -G localhost | grep -i "^passwordauthentication\\|^permitrootlogin"
+  register: ssh_verify
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  tags: [security, ssh, verify]
+
+- name: Display SSH verification results
+  ansible.builtin.debug:
+    var: ssh_verify.stdout_lines
+  tags: [security, ssh, verify]

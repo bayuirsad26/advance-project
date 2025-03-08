@@ -1,0 +1,40 @@
+---
+- name: Check if Mailcow is already installed
+  ansible.builtin.stat:
+    path: "{{ mailcow_dest }}/docker-compose.yml"
+  register: mailcow_installed
+  tags: [mailcow, check]
+
+- name: Include installation tasks
+  ansible.builtin.import_tasks: install.yml
+  when: not mailcow_installed.stat.exists
+  tags: [mailcow, install]
+
+- name: Include configuration tasks
+  ansible.builtin.import_tasks: configure.yml
+  tags: [mailcow, configure]
+
+- name: Include certificates tasks
+  ansible.builtin.import_tasks: certificates.yml
+  tags: [mailcow, certificates]
+
+- name: Include integration tasks
+  ansible.builtin.import_tasks: integration.yml
+  tags: [mailcow, integration]
+
+- name: Include backup tasks
+  ansible.builtin.import_tasks: backup.yml
+  when: mailcow_backup_enabled
+  tags: [mailcow, backup]
+
+- name: Include fail2ban tasks
+  ansible.builtin.import_tasks: fail2ban.yml
+  tags: [mailcow, fail2ban]
+
+- name: Include monitoring tasks
+  ansible.builtin.import_tasks: monitoring.yml
+  tags: [mailcow, monitoring]
+
+- name: Deploy Mailcow
+  ansible.builtin.import_tasks: deploy.yml
+  tags: [mailcow, deploy]

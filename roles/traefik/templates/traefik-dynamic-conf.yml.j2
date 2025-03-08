@@ -1,0 +1,34 @@
+# Default dynamic configuration for Traefik
+# Managed by Ansible - DO NOT EDIT MANUALLY
+
+http:
+  middlewares:
+    secured-headers:
+      headers:
+        sslRedirect: true
+        stsSeconds: 31536000
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        customFrameOptionsValue: SAMEORIGIN
+        contentSecurityPolicy: "frame-ancestors 'self'"
+
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict: true
+      cipherSuites:
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305

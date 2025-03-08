@@ -1,0 +1,46 @@
+---
+- name: Ensure required packages are installed
+  ansible.builtin.apt:
+    name:
+      - docker-compose-plugin
+      - python3-requests
+    state: present
+    update_cache: true
+  tags: [logging, prerequisites]
+
+- name: Create base logging directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  loop:
+    - "{{ logging_base_dir }}"
+    - "{{ logging_data_dir }}"
+    - "{{ logging_elasticsearch_data_dir }}"
+    - "{{ logging_elasticsearch_backup_dir }}"
+    - "{{ logging_logstash_config_dir }}"
+    - "{{ logging_logstash_pipeline_dir }}"
+    - "{{ logging_filebeat_config_dir }}"
+    - "{{ logging_filebeat_data_dir }}"
+  tags: [logging, prerequisites]
+
+- name: Set correct permissions for Elasticsearch data directory
+  ansible.builtin.file:
+    path: "{{ logging_elasticsearch_data_dir }}"
+    owner: 1000
+    group: 0
+    mode: "0755"
+    recurse: true
+  tags: [logging, prerequisites, permissions]
+
+- name: Set kernel parameters for Elasticsearch
+  ansible.posix.sysctl:
+    name: vm.max_map_count
+    value: "262144"
+    state: present
+    sysctl_file: /etc/sysctl.d/99-elasticsearch.conf
+    reload: true
+  become: true
+  tags: [logging, prerequisites, sysctl]

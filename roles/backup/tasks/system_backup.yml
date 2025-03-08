@@ -1,0 +1,44 @@
+---
+- name: Create system backup script
+  ansible.builtin.template:
+    src: templates/system_backup.sh.j2
+    dest: "{{ backup_base_dir }}/scripts/system_backup.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  tags: [backup, system]
+
+- name: Create system backup cleanup script
+  ansible.builtin.template:
+    src: templates/cleanup.sh.j2
+    dest: "{{ backup_base_dir }}/scripts/system_cleanup.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  tags: [backup, system, cleanup]
+
+- name: Set up system backup cron job
+  ansible.builtin.cron:
+    name: "System configuration backup"
+    job: "{{ backup_base_dir }}/scripts/system_backup.sh >> {{ backup_base_dir }}/logs/system_backup.log 2>&1"
+    minute: "{{ backup_schedule.system_config.cron.split(' ')[0] }}"
+    hour: "{{ backup_schedule.system_config.cron.split(' ')[1] }}"
+    day: "{{ backup_schedule.system_config.cron.split(' ')[2] }}"
+    month: "{{ backup_schedule.system_config.cron.split(' ')[3] }}"
+    weekday: "{{ backup_schedule.system_config.cron.split(' ')[4] }}"
+    user: "{{ backup_user }}"
+  tags: [backup, system, cron]
+
+- name: Set up system backup cleanup cron job
+  ansible.builtin.cron:
+    name: "System backup cleanup"
+    job: >-
+      {{ backup_base_dir }}/scripts/system_cleanup.sh system {{ backup_schedule.system_config.retention }} >>
+      {{ backup_base_dir }}/logs/system_cleanup.log 2>&1
+    minute: "30"
+    hour: "{{ backup_schedule.system_config.cron.split(' ')[1] }}"
+    day: "{{ backup_schedule.system_config.cron.split(' ')[2] }}"
+    month: "{{ backup_schedule.system_config.cron.split(' ')[3] }}"
+    weekday: "{{ backup_schedule.system_config.cron.split(' ')[4] }}"
+    user: "{{ backup_user }}"
+  tags: [backup, system, cron, cleanup]

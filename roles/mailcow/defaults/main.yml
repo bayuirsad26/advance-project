@@ -1,0 +1,66 @@
+---
+# Mailcow Git repository settings
+mailcow_git_repo: "https://github.com/mailcow/mailcow-dockerized.git"
+mailcow_dest: /opt/mailcow
+mailcow_branch: master
+
+# Mailcow domain settings
+mailcow_hostname: "{{ mailcow.hostname | default('mail.example.com') }}"
+mailcow_additional_san: "{{ mailcow.additional_san | default('') }}"
+
+# Mailcow database settings
+mailcow_dbname: "{{ mailcow.dbname | default('mailcow') }}"
+mailcow_dbuser: "{{ mailcow.dbuser | default('mailcowuser') }}"
+mailcow_dbpass: "{{ mailcow.dbpass | default(vault_mailcow_dbpass) }}"
+mailcow_dbroot: "{{ mailcow.dbroot | default(vault_mailcow_dbroot) }}"
+mailcow_redispass: "{{ mailcow.redispass | default(vault_mailcow_redispass) }}"
+
+# Mailcow timezone
+mailcow_tz: "{{ mailcow.tz | default('UTC') }}"
+
+# Mailcow ports to allow in firewall
+mailcow_ports:
+  # SMTP
+  - 25
+  # SMTPS
+  - 465
+  # Submission
+  - 587
+  # IMAP
+  - 143
+  # IMAPS
+  - 993
+  # POP3
+  - 110
+  # POP3S
+  - 995
+  # Sieve
+  - 4190
+
+# Mailcow backup settings
+mailcow_backup_enabled: true
+# daily, weekly, monthly
+mailcow_backup_interval: "daily"
+# number of backups to keep
+mailcow_backup_retention: 7
+mailcow_backup_dir: "/var/backups/mailcow"
+
+# Mailcow security settings
+mailcow_admin_user: "admin"
+mailcow_admin_password: "{{ mailcow.admin_password | default(vault_mailcow_admin_password) }}"
+
+# Mailcow config overrides
+mailcow_config_overrides:
+  - { key: "SKIP_LETS_ENCRYPT", value: "y" }
+  - { key: "SSL_TYPE", value: "manual" }
+  - { key: "SKIP_SOGO", value: "n" }
+  - { key: "SKIP_SOLR", value: "y" }
+  - { key: "SKIP_CLAMD", value: "n" }
+  - { key: "SKIP_DOCKERAPI", value: "n" }
+  - { key: "LOG_LINES", value: "500" }
+  - { key: "SOGO_LOG_LEVEL", value: "ERROR" }
+  - { key: "RSPAMD_LOG_LEVEL", value: "ERROR" }
+  - { key: "HTTP_BIND", value: "127.0.0.1" }
+  - { key: "HTTP_PORT", value: "8080" }
+  - { key: "HTTPS_BIND", value: "127.0.0.1" }
+  - { key: "HTTPS_PORT", value: "8443" }

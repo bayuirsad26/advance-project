@@ -1,0 +1,41 @@
+services:
+  traefik:
+    image: {{ traefik_image }}
+    container_name: traefik
+    command:
+{% for cmd in traefik_command %}
+      - "{{ cmd }}"
+{% endfor %}
+    ports:
+{% for port in traefik_ports %}
+      - "{{ port }}"
+{% endfor %}
+    volumes:
+{% for vol in traefik_volumes %}
+      - "{{ vol }}"
+{% endfor %}
+    networks:
+      - "{{ traefik_public_network }}"
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.{{ traefik_domain }}`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=myresolver"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.routers.dashboard.middlewares=secured-headers"
+      - "traefik.http.middlewares.auth.basicauth.users={{ traefik_dashboard_auth }}"
+      - "traefik.http.middlewares.secured-headers.headers.sslRedirect=true"
+      - "traefik.http.middlewares.secured-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.secured-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.secured-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.secured-headers.headers.forceSTSHeader=true"
+      - "traefik.http.middlewares.secured-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.secured-headers.headers.stsPreload=true"
+      - "traefik.http.middlewares.secured-headers.headers.customFrameOptionsValue=SAMEORIGIN"
+      - "traefik.http.middlewares.secured-headers.headers.contentSecurityPolicy=frame-ancestors 'self'"
+
+networks:
+  {{ traefik_public_network }}:
+    external: true

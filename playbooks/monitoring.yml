@@ -1,0 +1,50 @@
+---
+- name: "Monitoring Stack Deployment"
+  hosts: monitoring_servers
+  remote_user: "{{ ansible_user }}"
+  gather_facts: true
+  become: true
+  vars_files:
+    - "{{ inventory_dir }}/group_vars/vault.yml"
+  tags:
+    - monitoring
+
+  pre_tasks:
+    - name: Check if Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_check
+      failed_when: docker_check.rc != 0
+      changed_when: false
+      tags: [monitoring, prerequisites]
+
+    - name: Ensure Docker Compose plugin is installed
+      ansible.builtin.apt:
+        name: docker-compose-plugin
+        state: present
+        update_cache: true
+      when: docker_check.rc == 0
+      tags: [monitoring, prerequisites]
+
+  roles:
+    - role: monitoring
+      when: monitoring.enabled | default(true)
+      tags: [monitoring]
+
+  post_tasks:
+    - name: Verify Monitoring Services
+      ansible.builtin.command: docker ps --filter "name=prometheus|grafana|alertmanager"
+      register: docker_ps
+      changed_when: false
+      failed_when: "docker_ps.rc != 0 or 'prometheus' not in docker_ps.stdout or 'grafana' not in docker_ps.stdout"
+      tags: [monitoring, verify]
+
+    - name: Display Monitoring URLs
+      ansible.builtin.debug:
+        msg: |
+          Monitoring stack has been deployed successfully!
+
+          Access your monitoring services at:
+          - Prometheus: https://prometheus.{{ monitoring.domain }}
+          - Grafana: https://grafana.{{ monitoring.domain }}
+          - Alertmanager: https://alertmanager.{{ monitoring.domain }}
+      tags: [monitoring, info]

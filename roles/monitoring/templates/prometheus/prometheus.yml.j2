@@ -1,0 +1,61 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+  external_labels:
+    environment: {{ environment }}
+    monitor: 'summitethic-monitor'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  - "alerts/*.yml"
+
+# A scrape configuration for running Prometheus
+scrape_configs:
+  # Scrape Prometheus itself
+  - job_name: 'prometheus'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Scrape Node Exporter for host-level metrics
+  - job_name: 'node'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['node-exporter:9100']
+    
+  # Scrape cAdvisor for container metrics
+  - job_name: 'cadvisor'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['cadvisor:8080']
+    
+  # Scrape Traefik metrics
+  - job_name: 'traefik'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['traefik:8082']
+
+{% if monitoring_monitor_mailcow | default(true) %}
+  # Scrape Mailcow metrics (if available)
+  - job_name: 'mailcow'
+    scrape_interval: 30s
+    static_configs:
+      - targets: ['mailcow-mailcow-exporter:9633']
+{% endif %}
+
+{% for job in monitoring_additional_scrape_jobs | default([]) %}
+  # Additional scrape job: {{ job.name }}
+  - job_name: '{{ job.name }}'
+    scrape_interval: {{ job.interval | default('15s') }}
+    static_configs:
+      - targets: {{ job.targets | to_json }}
+{% endfor %}

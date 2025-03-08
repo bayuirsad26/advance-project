@@ -1,0 +1,51 @@
+---
+- name: Check if monitoring is enabled
+  ansible.builtin.stat:
+    path: /opt/monitoring
+  register: monitoring_dir
+  tags: [mailcow, monitoring]
+
+- name: Create mailcow exporter configuration
+  ansible.builtin.template:
+    src: templates/mailcow-exporter.yml.j2
+    dest: "{{ mailcow_dest }}/data/conf/mailcow-exporter.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  when: monitoring_dir.stat.exists
+  tags: [mailcow, monitoring]
+
+- name: Check if override YAML already has mailcow-exporter
+  ansible.builtin.command: grep -q "mailcow-exporter" "{{ mailcow_dest }}/docker-compose.override.yml"
+  register: exporter_exists
+  changed_when: false
+  failed_when: false
+  tags: [mailcow, monitoring, exporter]
+
+- name: Add mailcow exporter service to docker-compose
+  ansible.builtin.blockinfile:
+    path: "{{ mailcow_dest }}/docker-compose.override.yml"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - MAILCOW EXPORTER"
+    block: |
+
+      mailcow-exporter:
+        image: "kmonticolo/mailcow-exporter:latest"
+        restart: always
+        volumes:
+          - "{{ mailcow_dest }}/data/conf/mailcow-exporter.yml:/config.yml:ro"
+        networks:
+          - mailcow-network
+          - traefik-public
+        environment:
+          - CONFIG_FILE=/config.yml
+        depends_on:
+          - postfix-mailcow
+          - dovecot-mailcow
+          - redis-mailcow
+          - mysql-mailcow
+        expose:
+          - "9633"
+  when:
+    - monitoring_dir.stat.exists
+    - exporter_exists.rc != 0
+  tags: [mailcow, monitoring, exporter]

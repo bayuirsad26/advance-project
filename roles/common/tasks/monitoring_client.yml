@@ -1,0 +1,21 @@
+---
+- name: Install monitoring client packages
+  ansible.builtin.apt:
+    name:
+      - prometheus-node-exporter
+    state: present
+  tags: [common, monitoring]
+
+- name: Enable and start node exporter
+  ansible.builtin.service:
+    name: prometheus-node-exporter
+    state: started
+    enabled: true
+  tags: [common, monitoring]
+
+- name: Open node exporter port in firewall
+  community.general.ufw:
+    rule: allow
+    port: "9100"
+    proto: tcp
+  tags: [common, monitoring]

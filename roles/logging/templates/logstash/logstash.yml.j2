@@ -1,0 +1,12 @@
+pipeline.workers: {{ logging_logstash_pipeline_workers }}
+pipeline.batch.size: {{ logging_logstash_pipeline_batch_size }}
+pipeline.batch.delay: 50
+pipeline.ordered: auto
+
+path.config: /usr/share/logstash/pipeline
+path.logs: /usr/share/logstash/logs
+
+monitoring.elasticsearch.hosts: ["http://elasticsearch:9200"]
+monitoring.elasticsearch.username: "{{ logging_elastic_user }}"
+monitoring.elasticsearch.password: "{{ logging_elastic_password }}"
+xpack.monitoring.enabled: true

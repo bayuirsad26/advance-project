@@ -1,0 +1,77 @@
+---
+- name: "System Maintenance"
+  hosts: all
+  remote_user: "{{ ansible_user }}"
+  gather_facts: true
+  become: true
+  vars_files:
+    - "{{ inventory_dir }}/group_vars/vault.yml"
+  tags:
+    - maintenance
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+      tags: [maintenance, system]
+
+    - name: Upgrade system packages
+      ansible.builtin.apt:
+        upgrade: dist
+        autoremove: true
+      register: system_upgrade
+      when: ansible_os_family == 'Debian'
+      tags: [maintenance, system]
+
+    - name: Check disk space
+      ansible.builtin.command: df -h
+      register: disk_space
+      changed_when: false
+      tags: [maintenance, check_disk]
+
+    - name: Display disk space
+      ansible.builtin.debug:
+        var: disk_space.stdout_lines
+      tags: [maintenance, check_disk]
+
+    - name: Check service status
+      ansible.builtin.service_facts:
+      tags: [maintenance, check_services]
+
+    - name: Display Docker service status
+      ansible.builtin.debug:
+        msg: "Docker service is {{ ansible_facts.services['docker.service'].state }}"
+      when: ansible_facts.services['docker.service'] is defined
+      tags: [maintenance, check_services]
+
+    - name: Check Docker container status
+      ansible.builtin.command: docker ps -a
+      register: docker_status
+      changed_when: false
+      failed_when: false
+      tags: [maintenance, check_services]
+
+    - name: Display Docker container status
+      ansible.builtin.debug:
+        var: docker_status.stdout_lines
+      when: docker_status.rc == 0
+      tags: [maintenance, check_services]
+
+    - name: Clean up Docker system
+      ansible.builtin.command: docker system prune -f
+      register: docker_prune
+      changed_when: docker_prune.rc == 0
+      when: docker_cleanup | default(true)
+      tags: [maintenance, cleanup]
+
+    - name: Display maintenance summary
+      ansible.builtin.debug:
+        msg: |
+          System Maintenance Summary:
+          - Package updates: {{ "Applied" if system_upgrade.changed else "None required" }}
+          - Disk usage check: Complete
+          - Service check: Complete
+          - Docker cleanup: {{ "Performed" if docker_cleanup | default(true) else "Skipped" }}
+      tags: [maintenance, summary]

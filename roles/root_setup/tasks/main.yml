@@ -1,0 +1,60 @@
+---
+- name: Check OS compatibility
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution in ['Debian', 'Ubuntu']
+    msg: "This role only supports Debian and Ubuntu distributions"
+  tags: [bootstrap, check]
+
+- name: Update system package cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: root_setup_update_system
+  tags: [bootstrap, update]
+
+- name: Upgrade system packages
+  ansible.builtin.apt:
+    upgrade: "{{ 'dist' if root_setup_upgrade_system else 'no' }}"
+    autoremove: "{{ root_setup_autoremove }}"
+  register: system_update
+  when: root_setup_update_system and root_setup_upgrade_system
+  tags: [bootstrap, update]
+
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - sudo
+      - acl
+      - ufw
+      - openssh-server
+      - python3
+      - python3-pip
+      - python3-apt
+    state: present
+  tags: [bootstrap, packages]
+
+- name: Include user creation tasks
+  ansible.builtin.import_tasks: user_creation.yml
+  when: root_setup_create_admin_user
+  tags: [bootstrap, user_creation]
+
+- name: Include SSH configuration tasks
+  ansible.builtin.import_tasks: ssh_config.yml
+  tags: [bootstrap, ssh]
+
+- name: Check if reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+  tags: [bootstrap, reboot]
+
+- name: Reboot system if needed
+  ansible.builtin.reboot:
+    msg: "Reboot initiated by root_setup role due to system update"
+    connect_timeout: 5
+    reboot_timeout: 600
+  when:
+    - root_setup_reboot_if_needed
+    - reboot_required.stat.exists or (system_update is defined and system_update.changed)
+  tags: [bootstrap, reboot]

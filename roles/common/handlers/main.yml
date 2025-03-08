@@ -1,0 +1,9 @@
+---
+- name: Restart systemd-timesyncd
+  ansible.builtin.service:
+    name: systemd-timesyncd
+    state: restarted
+
+- name: Reload sysctl
+  ansible.builtin.command: sysctl -p /etc/sysctl.d/99-summitethic.conf
+  changed_when: true

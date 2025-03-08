@@ -1,0 +1,49 @@
+---
+- name: Template Prometheus configuration
+  ansible.builtin.template:
+    src: templates/prometheus/prometheus.yml.j2
+    dest: "{{ monitoring_prometheus_config_dir }}/prometheus.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [monitoring, prometheus]
+
+- name: Template system alert rules
+  ansible.builtin.template:
+    src: templates/prometheus/alerts/system_alerts.yml.j2
+    dest: "{{ monitoring_prometheus_config_dir }}/alerts/system_alerts.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [monitoring, prometheus, alerts]
+
+- name: Template traefik alert rules
+  ansible.builtin.template:
+    src: templates/prometheus/alerts/traefik_alerts.yml.j2
+    dest: "{{ monitoring_prometheus_config_dir }}/alerts/traefik_alerts.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  when: monitoring_monitor_traefik
+  tags: [monitoring, prometheus, alerts]
+
+- name: Template mailcow alert rules
+  ansible.builtin.template:
+    src: templates/prometheus/alerts/mailcow_alerts.yml.j2
+    dest: "{{ monitoring_prometheus_config_dir }}/alerts/mailcow_alerts.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  when: monitoring_monitor_mailcow
+  tags: [monitoring, prometheus, alerts]
+
+- name: Set proper ownership for data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ monitoring_prometheus_user }}"
+    group: "{{ monitoring_prometheus_group }}"
+    state: directory
+    recurse: true
+  loop:
+    - "{{ monitoring_prometheus_data_dir }}"
+  tags: [monitoring, prometheus]

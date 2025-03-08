@@ -1,0 +1,25 @@
+exclude_paths:
+  - .github/
+  - .cache/
+  - tests/
+  - molecule/
+  - .ansible-lint
+  - .yamllint
+
+parseable: true
+quiet: false
+verbosity: 1
+
+mock_modules: []
+mock_roles: []
+
+skip_list:
+  - no-handler
+  - no-changed-when
+  - yaml_edit_module
+
+warn_list:
+  - yaml
+  - experimental
+
+use_default_rules: true

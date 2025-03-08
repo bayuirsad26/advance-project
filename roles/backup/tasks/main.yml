@@ -1,0 +1,36 @@
+---
+- name: Check if backup is enabled
+  ansible.builtin.debug:
+    msg: "Backup is disabled. Skipping all tasks."
+  when: not backup_enabled
+  tags: [backup, check]
+
+- name: Include prerequisites tasks
+  ansible.builtin.import_tasks: prerequisites.yml
+  when: backup_enabled
+  tags: [backup, prerequisites]
+
+- name: Include system backup tasks
+  ansible.builtin.import_tasks: system_backup.yml
+  when: backup_enabled
+  tags: [backup, system]
+
+- name: Include database backup tasks
+  ansible.builtin.import_tasks: database_backup.yml
+  when: backup_enabled and (backup_databases.mysql.enabled or backup_databases.postgresql.enabled)
+  tags: [backup, database]
+
+- name: Include Docker volume backup tasks
+  ansible.builtin.import_tasks: docker_backup.yml
+  when: backup_enabled and backup_docker_volumes
+  tags: [backup, docker]
+
+- name: Include remote backup tasks
+  ansible.builtin.import_tasks: remote_backup.yml
+  when: backup_enabled and backup_remote_enabled
+  tags: [backup, remote]
+
+- name: Include monitoring tasks
+  ansible.builtin.import_tasks: monitoring.yml
+  when: backup_enabled
+  tags: [backup, monitoring]

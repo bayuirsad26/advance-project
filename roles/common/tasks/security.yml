@@ -1,0 +1,62 @@
+---
+# Common security tasks for all hosts
+
+- name: Ensure unattended-upgrades is installed
+  ansible.builtin.apt:
+    name: unattended-upgrades
+    state: present
+  tags: [common, security]
+
+- name: Configure unattended upgrades
+  ansible.builtin.template:
+    src: templates/50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [common, security]
+
+- name: Enable unattended upgrades
+  ansible.builtin.template:
+    src: templates/20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+  when: common_unattended_upgrades_enabled | default(true)
+  tags: [common, security]
+
+- name: Configure system-wide security limits
+  ansible.builtin.template:
+    src: templates/security-limits.conf.j2
+    dest: /etc/security/limits.conf
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [common, security]
+
+- name: Set secure permissions on sensitive directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+    recurse: false
+  loop:
+    - /etc/cron.d
+    - /etc/cron.daily
+    - /etc/cron.hourly
+    - /etc/cron.monthly
+    - /etc/cron.weekly
+  tags: [common, security]
+
+- name: Configure system password policies
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: "^{{ item.param }}\\s+"
+    line: "{{ item.param }}  {{ item.value }}"
+    state: present
+  loop:
+    - { param: "PASS_MAX_DAYS", value: "90" }
+    - { param: "PASS_MIN_DAYS", value: "1" }
+    - { param: "PASS_WARN_AGE", value: "7" }
+  tags: [common, security]

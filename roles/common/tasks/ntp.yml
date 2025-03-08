@@ -1,0 +1,23 @@
+---
+- name: Ensure systemd-timesyncd is installed
+  ansible.builtin.apt:
+    name: systemd-timesyncd
+    state: present
+  tags: [common, ntp]
+
+- name: Configure NTP servers
+  ansible.builtin.template:
+    src: templates/timesyncd.conf.j2
+    dest: /etc/systemd/timesyncd.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart systemd-timesyncd
+  tags: [common, ntp]
+
+- name: Enable and start timesyncd
+  ansible.builtin.service:
+    name: systemd-timesyncd
+    state: started
+    enabled: true
+  tags: [common, ntp]

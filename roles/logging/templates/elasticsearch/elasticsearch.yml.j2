@@ -1,0 +1,23 @@
+cluster.name: {{ logging_elasticsearch_cluster_name }}
+discovery.type: {{ logging_elasticsearch_discovery_type }}
+node.name: ${HOSTNAME}
+
+# Network
+network.host: 0.0.0.0
+http.port: 9200
+
+# Path settings
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+path.repo: /usr/share/elasticsearch/backup
+
+# Memory settings
+bootstrap.memory_lock: true
+
+# Security settings
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: false
+xpack.license.self_generated.type: basic
+
+# Monitoring
+xpack.monitoring.collection.enabled: true

@@ -1,0 +1,32 @@
+---
+- name: Template Kibana configuration
+  ansible.builtin.template:
+    src: templates/kibana/kibana.yml.j2
+    dest: "{{ logging_base_dir }}/kibana/kibana.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, kibana, config]
+
+- name: Create directory for saved objects
+  ansible.builtin.file:
+    path: "{{ logging_base_dir }}/kibana/saved_objects"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  tags: [logging, kibana, config]
+
+- name: Copy default dashboards
+  ansible.builtin.copy:
+    src: "files/kibana/{{ item }}"
+    dest: "{{ logging_base_dir }}/kibana/saved_objects/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop:
+    - system-dashboard.ndjson
+    - traefik-dashboard.ndjson
+    - mailcow-dashboard.ndjson
+    - security-dashboard.ndjson
+  tags: [logging, kibana, dashboards]

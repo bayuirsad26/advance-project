@@ -1,0 +1,17 @@
+-Xms{{ logging_elasticsearch_heap_size }}
+-Xmx{{ logging_elasticsearch_heap_size }}
+
+## GC settings
+-XX:+UseConcMarkSweepGC
+-XX:CMSInitiatingOccupancyFraction=75
+-XX:+UseCMSInitiatingOccupancyOnly
+
+## optimizations
+-XX:+DisableExplicitGC
+-XX:+AlwaysPreTouch
+-server
+-Djava.awt.headless=true
+
+## heap dumps
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=/usr/share/elasticsearch/logs/

@@ -1,0 +1,43 @@
+---
+- name: Create Mailcow backup directory
+  ansible.builtin.file:
+    path: "{{ mailcow_backup_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0750"
+  tags: [mailcow, backup]
+
+- name: Create Mailcow backup script
+  ansible.builtin.template:
+    src: templates/backup-mailcow.sh.j2
+    dest: "{{ mailcow_dest }}/backup.sh"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  tags: [mailcow, backup]
+
+- name: Set up Mailcow backup cron job
+  ansible.builtin.cron:
+    name: "Mailcow backup"
+    job: "{{ mailcow_dest }}/backup.sh > {{ mailcow_dest }}/data/logs/backup.log 2>&1"
+    special_time: "{{ mailcow_backup_interval }}"
+    user: "{{ ansible_user }}"
+  tags: [mailcow, backup]
+
+- name: Create cleanup script for old backups
+  ansible.builtin.template:
+    src: templates/cleanup-backups.sh.j2
+    dest: "{{ mailcow_dest }}/cleanup-backups.sh"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  tags: [mailcow, backup, cleanup]
+
+- name: Set up backup cleanup cron job
+  ansible.builtin.cron:
+    name: "Mailcow backup cleanup"
+    job: "{{ mailcow_dest }}/cleanup-backups.sh >> {{ mailcow_dest }}/data/logs/backup.log 2>&1"
+    special_time: "{{ mailcow_backup_interval }}"
+    user: "{{ ansible_user }}"
+  tags: [mailcow, backup, cleanup]

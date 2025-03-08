@@ -1,0 +1,50 @@
+---
+# General ELK stack settings
+logging_enabled: true
+logging_domain: "{{ domain }}"
+logging_base_dir: "/opt/logging"
+logging_data_dir: "{{ logging_base_dir }}/data"
+
+# ELK stack versions
+logging_elasticsearch_version: "7.17.9"
+logging_logstash_version: "7.17.9"
+logging_kibana_version: "7.17.9"
+logging_filebeat_version: "7.17.9"
+
+# Elasticsearch settings
+logging_elasticsearch_heap_size: "1g"
+logging_elasticsearch_cluster_name: "summitethic-logging"
+logging_elasticsearch_discovery_type: "single-node"
+logging_elasticsearch_port: 9200
+logging_elasticsearch_data_dir: "{{ logging_data_dir }}/elasticsearch"
+logging_elasticsearch_backup_dir: "{{ logging_data_dir }}/backups"
+
+# Kibana settings
+logging_kibana_port: 5601
+
+# Authentication
+logging_elastic_user: "elastic"
+logging_elastic_password: "{{ vault_logging_elastic_password | default('changeme') }}"
+logging_kibana_user: "kibana"
+logging_kibana_password: "{{ vault_logging_kibana_password | default('changeme') }}"
+
+# Logstash settings
+logging_logstash_heap_size: "512m"
+logging_logstash_pipeline_workers: 2
+logging_logstash_pipeline_batch_size: 125
+logging_logstash_config_dir: "{{ logging_base_dir }}/logstash/config"
+logging_logstash_pipeline_dir: "{{ logging_base_dir }}/logstash/pipeline"
+
+# Filebeat settings
+logging_filebeat_config_dir: "{{ logging_base_dir }}/filebeat/config"
+logging_filebeat_data_dir: "{{ logging_data_dir }}/filebeat"
+
+# Log sources to collect
+logging_collect_system_logs: true
+logging_collect_docker_logs: true
+logging_collect_traefik_logs: true
+logging_collect_mailcow_logs: true
+logging_collect_auth_logs: true
+
+# Network settings
+logging_network_name: "logging-network"

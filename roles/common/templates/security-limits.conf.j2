@@ -1,0 +1,78 @@
+# /etc/security/limits.conf
+#
+# System-wide resource limits managed by Ansible
+# These limits apply to users and processes on the system
+#
+# Each line describes a limit for a user in the form:
+#
+# <domain>   <type>   <item>   <value>
+#
+# <domain> can be:
+#   - a user name
+#   - a group name, with @group syntax
+#   - the wildcard *, for default entry
+#   - the wildcard %, can be also used with %group syntax,
+#     for maxlogin limit
+#
+# <type> can have the values:
+#   - soft for enforcing the soft limits
+#   - hard for enforcing hard limits
+#
+# <item> can be one of the following:
+#   - core - limits the core file size (KB)
+#   - data - max data size (KB)
+#   - fsize - maximum filesize (KB)
+#   - memlock - max locked-in-memory address space (KB)
+#   - nofile - max number of open files
+#   - rss - max resident set size (KB)
+#   - stack - max stack size (KB)
+#   - cpu - max CPU time (MIN)
+#   - nproc - max number of processes
+#   - as - address space limit (KB)
+#   - maxlogins - max number of logins for this user
+#   - maxsyslogins - max number of logins on the system
+#   - priority - the priority to run user process with
+#   - locks - max number of file locks the user can hold
+#   - sigpending - max number of pending signals
+#   - msgqueue - max memory used by POSIX message queues (bytes)
+#   - nice - max nice priority allowed to raise to
+#   - rtprio - max realtime priority
+
+# Default limit for number of user processes to prevent fork bombs
+*          soft    nproc          1024
+*          hard    nproc          4096
+
+# Prevent core dumps from becoming a security risk
+*          hard    core           0
+
+# Increase open files limit for all users
+*          soft    nofile         1024
+*          hard    nofile         65536
+
+# Root should have higher limits for system management
+root       soft    nofile         65536
+root       hard    nofile         65536
+
+# Limit maximum memory lock for non-root users (KB)
+*          soft    memlock        64
+*          hard    memlock        64
+
+# Allow root to lock memory for system processes
+root       soft    memlock        unlimited
+root       hard    memlock        unlimited
+
+# Limit maximum number of logins per user
+*          hard    maxlogins      10
+
+# Additional limits for system services
+{{ ansible_user }} soft    nofile         10240
+{{ ansible_user }} hard    nofile         20480
+
+{% if common_additional_limits is defined %}
+# Custom additional limits
+{% for limit in common_additional_limits %}
+{{ limit.domain }} {{ limit.type }} {{ limit.item }} {{ limit.value }}
+{% endfor %}
+{% endif %}
+
+# End of file

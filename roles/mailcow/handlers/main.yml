@@ -1,0 +1,11 @@
+---
+- name: Restart mailcow
+  community.docker.docker_compose_v2:
+    project_src: "{{ mailcow_dest }}"
+    state: restarted
+  become: true
+
+- name: Restart fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: restarted

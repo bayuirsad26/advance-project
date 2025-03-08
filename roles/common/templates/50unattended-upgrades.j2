@@ -1,0 +1,23 @@
+Unattended-Upgrade::Allowed-Origins {
+{% for origin in common_unattended_upgrade_origins %}
+    "{{ origin }}";
+{% endfor %}
+};
+
+Unattended-Upgrade::Package-Blacklist {
+//  "vim";
+//  "libc6";
+};
+
+Unattended-Upgrade::AutoFixInterruptedDpkg "true";
+Unattended-Upgrade::MinimalSteps "true";
+Unattended-Upgrade::InstallOnShutdown "false";
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";
+Unattended-Upgrade::Remove-New-Unused-Dependencies "true";
+Unattended-Upgrade::Remove-Unused-Dependencies "false";
+Unattended-Upgrade::Automatic-Reboot "{{ common_unattended_upgrade_automatic_reboot | lower }}";
+Unattended-Upgrade::Automatic-Reboot-Time "{{ common_unattended_upgrade_automatic_reboot_time }}";
+Unattended-Upgrade::Mail "{{ common_unattended_upgrade_mail }}";
+Unattended-Upgrade::MailReport "on-change";
+Unattended-Upgrade::SyslogEnable "true";
+Unattended-Upgrade::SyslogFacility "daemon";

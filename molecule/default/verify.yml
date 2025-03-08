@@ -1,0 +1,26 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Check if UFW is installed and enabled
+      command: ufw status
+      register: ufw_status
+      changed_when: false
+      failed_when: "'Status: active' not in ufw_status.stdout"
+
+    - name: Check if SSH configuration is secure
+      command: sshd -T
+      register: sshd_config
+      changed_when: false
+      failed_when: >
+        "permitrootlogin no" not in sshd_config.stdout.lower() or
+        "passwordauthentication no" not in sshd_config.stdout.lower()
+
+    - name: Check if Docker is installed and running
+      command: docker ps
+      register: docker_status
+      changed_when: false
+      failed_when: docker_status.rc != 0

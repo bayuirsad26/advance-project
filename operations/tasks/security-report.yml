@@ -1,0 +1,9 @@
+---
+# Security report generation tasks
+- name: Generate security status report
+  ansible.builtin.template:
+    src: templates/security-report.j2
+    dest: "/tmp/security-report-{{ inventory_hostname }}-{{ ansible_date_time.date }}.txt"
+    mode: "0640"
+  delegate_to: localhost
+  changed_when: false

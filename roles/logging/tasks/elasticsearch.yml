@@ -1,0 +1,36 @@
+---
+- name: Template Elasticsearch configuration
+  ansible.builtin.template:
+    src: templates/elasticsearch/elasticsearch.yml.j2
+    dest: "{{ logging_base_dir }}/elasticsearch/elasticsearch.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, elasticsearch, config]
+
+- name: Configure Elasticsearch JVM settings
+  ansible.builtin.template:
+    src: templates/elasticsearch/jvm.options.j2
+    dest: "{{ logging_base_dir }}/elasticsearch/jvm.options"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, elasticsearch, config]
+
+- name: Create Elasticsearch backup script
+  ansible.builtin.template:
+    src: templates/elasticsearch/backup.sh.j2
+    dest: "{{ logging_base_dir }}/elasticsearch-backup.sh"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  tags: [logging, elasticsearch, backup]
+
+- name: Set up Elasticsearch backup cron job
+  ansible.builtin.cron:
+    name: "Elasticsearch backup"
+    job: "{{ logging_base_dir }}/elasticsearch-backup.sh"
+    hour: "1"
+    minute: "0"
+    user: "{{ ansible_user }}"
+  tags: [logging, elasticsearch, backup]

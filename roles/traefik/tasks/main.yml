@@ -1,0 +1,47 @@
+---
+- name: Include prerequisites tasks
+  ansible.builtin.import_tasks: prerequisites.yml
+  tags: [traefik, prerequisites]
+
+- name: Create Traefik public network
+  community.docker.docker_network:
+    name: "{{ traefik_public_network }}"
+    driver: bridge
+    state: present
+  tags: [traefik, network]
+
+- name: Include deployment tasks
+  ansible.builtin.import_tasks: deploy.yml
+  tags: [traefik, deploy]
+
+- name: Include configuration tasks
+  ansible.builtin.import_tasks: configure.yml
+  tags: [traefik, configure]
+
+- name: Verify Traefik deployment
+  ansible.builtin.uri:
+    url: "https://traefik.{{ traefik_domain }}/api/version"
+    method: GET
+    user: "{{ traefik_dashboard_auth.split(':')[0] }}"
+    password: "{{ traefik_dashboard_auth.split(':')[1].split('$')[0] }}"
+    force_basic_auth: true
+    validate_certs: false
+    status_code: 200
+  register: traefik_check
+  changed_when: false
+  failed_when: false
+  ignore_errors: true
+  tags: [traefik, verify]
+
+- name: Display Traefik status
+  ansible.builtin.debug:
+    msg: >
+      Traefik status: {{ "Running" if traefik_check.status == 200 else "Not accessible" }}
+
+      {% if traefik_check.status == 200 %}
+      Version: {{ traefik_check.json.Version }}
+      {% else %}
+      Note: Traefik dashboard may take a few minutes to become available
+      or there might be an issue with the deployment.
+      {% endif %}
+  tags: [traefik, verify]

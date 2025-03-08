@@ -1,0 +1,71 @@
+---
+# System security settings
+security_kernel_parameters:
+  - { name: "kernel.randomize_va_space", value: 2 }
+  - { name: "net.ipv4.conf.all.accept_redirects", value: 0 }
+  - { name: "net.ipv4.conf.all.accept_source_route", value: 0 }
+  - { name: "net.ipv4.conf.all.log_martians", value: 1 }
+  - { name: "net.ipv4.tcp_syncookies", value: 1 }
+  - { name: "net.ipv4.icmp_echo_ignore_broadcasts", value: 1 }
+  - { name: "net.ipv4.icmp_ignore_bogus_error_responses", value: 1 }
+  - { name: "net.ipv6.conf.all.accept_redirects", value: 0 }
+  - { name: "net.ipv6.conf.default.accept_redirects", value: 0 }
+  - { name: "fs.protected_hardlinks", value: 1 }
+  - { name: "fs.protected_symlinks", value: 1 }
+
+# Authentication security
+security_password_min_length: 12
+# Require 3 character classes
+security_password_min_complexity: 3
+security_password_max_age: 90
+security_password_history: 5
+security_account_lockout_threshold: 5
+# 30 minutes
+security_account_lockout_time: 1800
+
+# SSH hardening options
+security_ssh_permit_root_login: "{{ security.ssh.permit_root_login | default('no') }}"
+security_ssh_password_auth: "{{ security.ssh.password_auth | default('no') }}"
+security_ssh_x11_forwarding: "{{ security.ssh.x11_forwarding | default('no') }}"
+security_ssh_max_auth_tries: 3
+security_ssh_allow_agent_forwarding: "{{ security.ssh.allow_agent_forwarding | default('no') }}"
+security_ssh_allow_tcp_forwarding: "{{ security.ssh.allow_tcp_forwarding | default('no') }}"
+security_ssh_max_sessions: 2
+security_ssh_ciphers:
+  - chacha20-poly1305@openssh.com
+  - aes256-gcm@openssh.com
+  - aes128-gcm@openssh.com
+security_ssh_kex_algorithms:
+  - curve25519-sha256@libssh.org
+  - diffie-hellman-group-exchange-sha256
+security_ssh_macs:
+  - hmac-sha2-512-etm@openssh.com
+  - hmac-sha2-256-etm@openssh.com
+
+# File integrity monitoring
+security_aide_enabled: true
+# Daily at 5am
+security_aide_cron_schedule: "0 5 * * *"
+security_aide_excluded_paths:
+  - /var/log
+  - /tmp
+  - /var/tmp
+
+# Auditing configuration
+security_auditd_enabled: true
+security_auditd_rules:
+  - "-w /etc/passwd -p wa -k identity"
+  - "-w /etc/group -p wa -k identity"
+  - "-w /etc/shadow -p wa -k identity"
+  - "-w /etc/sudoers -p wa -k identity"
+  - "-a always,exit -F arch=b64 -S execve -k exec"
+
+# Firewall rules
+security_firewall_service: "ufw"
+security_firewall_rules: >-
+  {{ security.firewall.rules | default([{port: 22, proto: tcp, rule: allow},
+  {port: 80, proto: tcp, rule: allow}, {port: 443, proto: tcp, rule: allow}]) }}
+
+# Compliance settings
+security_compliance_standards: "{{ security.compliance_standards | default(['cis']) }}"
+security_audit_only: false

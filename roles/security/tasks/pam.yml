@@ -1,0 +1,34 @@
+---
+- name: Configure PAM password policy
+  ansible.builtin.template:
+    src: templates/pam.d/common-password.j2
+    dest: /etc/pam.d/common-password
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [security, authentication]
+
+- name: Configure PAM authentication policy
+  ansible.builtin.template:
+    src: templates/pam.d/common-auth.j2
+    dest: /etc/pam.d/common-auth
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [security, authentication]
+
+- name: Ensure libpam-pwquality is installed
+  ansible.builtin.apt:
+    name: libpam-pwquality
+    state: present
+    update_cache: true
+  tags: [security, authentication]
+
+- name: Configure password quality requirements
+  ansible.builtin.template:
+    src: templates/pwquality.conf.j2
+    dest: /etc/security/pwquality.conf
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [security, authentication]

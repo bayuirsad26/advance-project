@@ -1,0 +1,50 @@
+---
+- name: Create directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  loop:
+    - "{{ mailcow_dest }}/data/conf/postfix/custom"
+    - "{{ mailcow_dest }}/data/conf/dovecot/extra"
+    - "{{ mailcow_dest }}/data/conf/rspamd/custom"
+    - "{{ mailcow_dest }}/data/conf/nginx"
+    - "{{ mailcow_dest }}/data/conf/fail2ban"
+    - "{{ mailcow_dest }}/data/assets/ssl"
+    - "{{ mailcow_dest }}/data/logs"
+  tags: [mailcow, configure]
+
+- name: Update Mailcow environment variables
+  ansible.builtin.lineinfile:
+    path: "{{ mailcow_dest }}/.env"
+    regexp: "^{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    state: present
+  loop: "{{ mailcow_config_overrides }}"
+  tags: [mailcow, configure, env]
+
+- name: Configure Docker Compose override for Traefik integration
+  ansible.builtin.template:
+    src: templates/docker-compose.override.yml.j2
+    dest: "{{ mailcow_dest }}/docker-compose.override.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [mailcow, configure, traefik]
+
+- name: Create Mailcow network
+  community.docker.docker_network:
+    name: mailcow-network
+    driver: bridge
+    state: present
+  tags: [mailcow, network]
+
+- name: Allow Mailcow ports in firewall
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: "{{ mailcow_ports }}"
+  tags: [mailcow, firewall]

@@ -1,0 +1,7 @@
+---
+- name: Include relevant compliance standards
+  ansible.builtin.include_tasks: "{{ compliance_standard }}.yml"
+  loop: "{{ security_compliance_standards }}"
+  loop_control:
+    loop_var: compliance_standard
+  tags: [security, compliance]

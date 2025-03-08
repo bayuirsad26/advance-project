@@ -1,0 +1,17 @@
+server.name: kibana
+server.host: "0.0.0.0"
+server.port: 5601
+
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.username: "{{ logging_elastic_user }}"
+elasticsearch.password: "{{ logging_elastic_password }}"
+
+monitoring.ui.container.elasticsearch.enabled: true
+
+# Various timeouts
+elasticsearch.pingTimeout: 60000
+elasticsearch.requestTimeout: 60000
+elasticsearch.shardTimeout: 60000
+
+# Security settings
+xpack.security.enabled: true

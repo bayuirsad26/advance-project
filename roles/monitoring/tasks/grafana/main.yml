@@ -1,0 +1,42 @@
+---
+- name: Template Grafana datasource provisioning
+  ansible.builtin.template:
+    src: templates/grafana/datasources/prometheus.yml.j2
+    dest: "{{ monitoring_grafana_config_dir }}/provisioning/datasources/prometheus.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [monitoring, grafana, datasources]
+
+- name: Template Grafana dashboard provisioning
+  ansible.builtin.template:
+    src: templates/grafana/dashboards/dashboard.yml.j2
+    dest: "{{ monitoring_grafana_config_dir }}/provisioning/dashboards/dashboard.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [monitoring, grafana, dashboards]
+
+- name: Copy Grafana dashboards
+  ansible.builtin.copy:
+    src: "files/dashboards/{{ item }}"
+    dest: "{{ monitoring_grafana_config_dir }}/provisioning/dashboards/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop:
+    - node_exporter.json
+    - docker.json
+    - traefik.json
+  tags: [monitoring, grafana, dashboards]
+
+- name: Set proper ownership for data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ monitoring_grafana_user }}"
+    group: "{{ monitoring_grafana_group }}"
+    state: directory
+    recurse: true
+  loop:
+    - "{{ monitoring_grafana_data_dir }}"
+  tags: [monitoring, grafana]

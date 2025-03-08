@@ -1,0 +1,50 @@
+---
+dependency:
+  name: galaxy
+  options:
+    requirements-file: requirements.yml
+
+driver:
+  name: docker
+
+platforms:
+  - name: instance
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-ubuntu2204}-ansible
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    privileged: true
+    pre_build_image: true
+    exposed_ports:
+      - 80
+      - 443
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto
+      callback_whitelist: profile_tasks, timer
+  inventory:
+    host_vars:
+      instance:
+        ansible_user: ansible
+        ansible_become: true
+
+verifier:
+  name: ansible
+
+scenario:
+  test_sequence:
+    - dependency
+    - lint
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup
+    - destroy

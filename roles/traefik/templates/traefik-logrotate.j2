@@ -1,0 +1,12 @@
+{{ traefik_log_dir }}/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 {{ ansible_user }} {{ ansible_user }}
+    sharedscripts
+    postrotate
+        docker restart traefik > /dev/null 2>/dev/null || true
+    endscript
+}

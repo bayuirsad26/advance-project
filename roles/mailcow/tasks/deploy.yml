@@ -1,0 +1,69 @@
+---
+- name: Stop all Mailcow services
+  community.docker.docker_compose_v2:
+    project_src: "{{ mailcow_dest }}"
+    state: absent
+  tags: [mailcow, deploy]
+
+- name: Wait for containers to fully stop
+  ansible.builtin.pause:
+    seconds: 5
+  tags: [mailcow, deploy]
+
+- name: Start Mailcow services
+  community.docker.docker_compose_v2:
+    project_src: "{{ mailcow_dest }}"
+    state: present
+    pull: "always"
+  tags: [mailcow, deploy]
+
+- name: Wait for container creation
+  ansible.builtin.pause:
+    seconds: 10
+  tags: [mailcow, deploy]
+
+- name: Run the dovecot fix script
+  ansible.builtin.command:
+    cmd: "{{ mailcow_dest }}/fix-dovecot.sh"
+  register: fix_result
+  changed_when: fix_result.rc == 0
+  failed_when: false
+  tags: [mailcow, deploy, fix]
+
+- name: Wait for Mailcow to be fully operational
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 8080
+    timeout: 300
+    delay: 10
+  tags: [mailcow, deploy]
+
+- name: Check Mailcow web UI status
+  ansible.builtin.uri:
+    url: "https://{{ mailcow_hostname }}"
+    method: GET
+    validate_certs: false
+    status_code: [200, 302]
+  register: mailcow_ui_check
+  failed_when: false
+  tags: [mailcow, deploy, check]
+
+- name: Display Mailcow deployment information
+  ansible.builtin.debug:
+    msg: |
+      Mailcow has been deployed successfully!
+
+      Web interface: https://{{ mailcow_hostname }}
+      Default admin credentials:
+      - Username: {{ mailcow_admin_user }}
+      - Password: {{ mailcow_admin_password }}
+
+      Note: It's recommended to change the default password immediately.
+
+      Mail services:
+      - SMTP:      {{ mailcow_hostname }}:25, 465, 587
+      - IMAP(S):   {{ mailcow_hostname }}:143, 993
+      - POP3(S):   {{ mailcow_hostname }}:110, 995
+      - Sieve:     {{ mailcow_hostname }}:4190
+  when: mailcow_ui_check.status in [200, 302]
+  tags: [mailcow, deploy, info]

@@ -1,0 +1,24 @@
+---
+dovecot:
+  enabled: true
+  host: dovecot-mailcow
+  port: 24242
+
+postfix:
+  enabled: true
+  host: postfix-mailcow
+  port: 7
+
+mysql:
+  enabled: true
+  host: mysql-mailcow
+  port: 3306
+  user: {{ mailcow_dbuser }}
+  password: {{ mailcow_dbpass }}
+  database: {{ mailcow_dbname }}
+
+redis:
+  enabled: true
+  host: redis-mailcow
+  port: 6379
+  password: {{ mailcow_redispass }}

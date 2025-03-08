@@ -1,0 +1,41 @@
+---
+- name: Ensure fail2ban is installed
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+  tags: [mailcow, fail2ban]
+
+- name: Create fail2ban jail for Mailcow
+  ansible.builtin.template:
+    src: templates/jail-mailcow.conf.j2
+    dest: /etc/fail2ban/jail.d/mailcow.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+  tags: [mailcow, fail2ban]
+
+- name: Create fail2ban filter for Mailcow
+  ansible.builtin.template:
+    src: templates/filter-mailcow.conf.j2
+    dest: /etc/fail2ban/filter.d/mailcow.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart fail2ban
+  tags: [mailcow, fail2ban]
+
+- name: Ensure log directory exists and accessible
+  ansible.builtin.file:
+    path: "{{ mailcow_dest }}/data/logs"
+    state: directory
+    mode: "0755"
+  tags: [mailcow, fail2ban]
+
+- name: Create symlink for mail log
+  ansible.builtin.file:
+    src: "{{ mailcow_dest }}/data/logs/mail.log"
+    dest: "/var/log/mailcow.log"
+    state: link
+    force: true
+  tags: [mailcow, fail2ban]

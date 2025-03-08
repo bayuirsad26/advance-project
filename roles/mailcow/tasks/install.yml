@@ -1,0 +1,41 @@
+---
+- name: Ensure docker-compose-plugin is installed
+  ansible.builtin.apt:
+    name: docker-compose-plugin
+    state: present
+    update_cache: true
+  tags: [mailcow, prerequisites]
+
+- name: Create directory for Mailcow
+  ansible.builtin.file:
+    path: "{{ mailcow_dest }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  tags: [mailcow, directory]
+
+- name: Clone Mailcow-dockerized repository
+  ansible.builtin.git:
+    repo: "{{ mailcow_git_repo }}"
+    dest: "{{ mailcow_dest }}"
+    version: "{{ mailcow_branch }}"
+    force: true
+  register: git_clone
+  tags: [mailcow, git]
+
+- name: Generate Mailcow configuration
+  ansible.builtin.command:
+    cmd: ./generate_config.sh
+    chdir: "{{ mailcow_dest }}"
+  args:
+    creates: "{{ mailcow_dest }}/.env"
+  environment:
+    MAILCOW_HOSTNAME: "{{ mailcow_hostname }}"
+    MAILCOW_TZ: "{{ mailcow_tz }}"
+    DBNAME: "{{ mailcow_dbname }}"
+    DBUSER: "{{ mailcow_dbuser }}"
+    DBPASS: "{{ mailcow_dbpass }}"
+    DBROOT: "{{ mailcow_dbroot }}"
+  when: git_clone.changed
+  tags: [mailcow, config]

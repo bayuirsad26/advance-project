@@ -1,0 +1,46 @@
+---
+- name: Run CIS compliance checks
+  when: not security_audit_only
+  tags: [security, compliance, cis]
+  block:
+    - name: Check permissions on system files
+      ansible.builtin.command: find /etc -type f -name "*.conf" -perm /o+w -ls
+      register: world_writable_conf
+      changed_when: false
+      failed_when: world_writable_conf.stdout != ""
+
+    - name: Ensure no regular users have UID 0
+      ansible.builtin.command: awk -F ":" 'nk==0 && $3=="0" && $1!="root" {print $1}' /etc/passwd
+      register: uid_zero_users
+      changed_when: false
+      failed_when: uid_zero_users.stdout != ""
+
+    - name: Ensure root group is GID 0
+      ansible.builtin.command: grep "^root:" /etc/group
+      register: root_gid
+      changed_when: false
+      failed_when: not root_gid.stdout.startswith("root:x:0:")
+
+- name: Apply CIS hardening measures
+  when: not security_audit_only
+  tags: [security, compliance, cis]
+  block:
+    - name: Remove legacy + entries from password files
+      ansible.builtin.lineinfile:
+        path: "{{ item }}"
+        regexp: "^\\+.*$"
+        state: absent
+      loop:
+        - /etc/passwd
+        - /etc/shadow
+        - /etc/group
+
+    - name: Set password expiration parameters
+      ansible.builtin.lineinfile:
+        path: /etc/login.defs
+        regexp: "^{{ item.param }}\\s+"
+        line: "{{ item.param }}	{{ item.value }}"
+      loop:
+        - {param: "PASS_MAX_DAYS", value: "{{ security_password_max_age }}"}
+        - {param: "PASS_MIN_DAYS", value: "1"}
+        - {param: "PASS_WARN_AGE", value: "7"}

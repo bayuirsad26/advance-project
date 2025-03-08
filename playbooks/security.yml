@@ -1,0 +1,34 @@
+---
+- name: "Security Configuration and Audit"
+  hosts: all
+  remote_user: "{{ ansible_user }}"
+  gather_facts: true
+  become: true
+  vars_files:
+    - "{{ inventory_dir }}/group_vars/vault.yml"
+  tags:
+    - security
+
+  pre_tasks:
+    - name: Check SSH service status
+      ansible.builtin.service_facts:
+      tags: [security, check]
+
+    - name: Verify SSH is running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['ssh.service'] is defined
+          - ansible_facts.services['ssh.service'].state == 'running'
+        msg: "SSH service is not running, which is required for remote management"
+      tags: [security, check]
+
+  roles:
+    - role: security
+      vars:
+        security_audit_only: "{{ audit_only | default(false) }}"
+
+  tasks:
+    - name: Generate security report
+      ansible.builtin.include_tasks: operations/tasks/security-report.yml
+      when: generate_report | default(true)
+      tags: [security, report]

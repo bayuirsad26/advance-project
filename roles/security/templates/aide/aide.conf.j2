@@ -1,0 +1,29 @@
+# AIDE configuration file managed by Ansible
+
+# Database settings
+database=file:/var/lib/aide/aide.db
+database_out=file:/var/lib/aide/aide.db.new
+database_new=file:/var/lib/aide/aide.db.new
+gzip_dbout=yes
+
+# Rule sets
+PERMS = p+i+u+g+acl+selinux+xattrs
+CONTENT = sha256+ftype
+LOGS = >
+EVERYTHING = R+PERMS+CONTENT
+
+# Monitored directories
+/boot   EVERYTHING
+/bin    EVERYTHING
+/sbin   EVERYTHING
+/lib    EVERYTHING
+/lib64  EVERYTHING
+/opt    EVERYTHING
+/root   EVERYTHING
+/usr    EVERYTHING
+/etc    EVERYTHING
+
+# Excluded paths
+{% for excluded_path in security_aide_excluded_paths %}
+!{{ excluded_path }}
+{% endfor %}

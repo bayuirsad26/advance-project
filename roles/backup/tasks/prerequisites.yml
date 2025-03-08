@@ -1,0 +1,48 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - rsync
+      - tar
+      - gzip
+      - pigz
+      - pv
+      - uuid-runtime
+      - gpg
+      - python3-pip
+    state: present
+    update_cache: true
+  tags: [backup, prerequisites]
+
+- name: Install AWS CLI for S3 backup
+  ansible.builtin.pip:
+    name: awscli
+    state: present
+  when: backup_remote_enabled and backup_remote_type == 's3'
+  tags: [backup, prerequisites, s3]
+
+- name: Create backup directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  loop:
+    - "{{ backup_base_dir }}"
+    - "{{ backup_base_dir }}/system"
+    - "{{ backup_base_dir }}/databases"
+    - "{{ backup_base_dir }}/docker"
+    - "{{ backup_base_dir }}/logs"
+    - "{{ backup_base_dir }}/scripts"
+  tags: [backup, prerequisites]
+
+- name: Create encryption key file if encryption is enabled
+  ansible.builtin.copy:
+    content: "{{ backup_encryption_password }}"
+    dest: "{{ backup_base_dir }}/.encryption_key"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0400"
+  when: backup_encrypt and backup_encryption_password != ''
+  tags: [backup, prerequisites, encryption]

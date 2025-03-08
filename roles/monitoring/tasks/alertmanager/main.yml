@@ -1,0 +1,20 @@
+---
+- name: Template Alertmanager configuration
+  ansible.builtin.template:
+    src: templates/alertmanager/alertmanager.yml.j2
+    dest: "{{ monitoring_alertmanager_config_dir }}/alertmanager.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [monitoring, alertmanager]
+
+- name: Set proper ownership for data directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ monitoring_alertmanager_user }}"
+    group: "{{ monitoring_alertmanager_group }}"
+    state: directory
+    recurse: true
+  loop:
+    - "{{ monitoring_alertmanager_data_dir }}"
+  tags: [monitoring, alertmanager]

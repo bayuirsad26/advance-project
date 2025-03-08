@@ -1,0 +1,40 @@
+---
+- name: Template Logstash configuration
+  ansible.builtin.template:
+    src: templates/logstash/logstash.yml.j2
+    dest: "{{ logging_logstash_config_dir }}/logstash.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, logstash, config]
+
+- name: Configure Logstash JVM settings
+  ansible.builtin.template:
+    src: templates/logstash/jvm.options.j2
+    dest: "{{ logging_logstash_config_dir }}/jvm.options"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, logstash, config]
+
+- name: Template Logstash pipeline configuration
+  ansible.builtin.template:
+    src: templates/logstash/pipeline.conf.j2
+    dest: "{{ logging_logstash_pipeline_dir }}/main.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, logstash, pipeline]
+
+- name: Template Logstash patterns
+  ansible.builtin.template:
+    src: "templates/logstash/patterns/{{ item }}.j2"
+    dest: "{{ logging_logstash_config_dir }}/patterns/{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop:
+    - traefik
+    - mailcow
+    - system
+  tags: [logging, logstash, patterns]

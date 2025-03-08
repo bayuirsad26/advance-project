@@ -1,0 +1,31 @@
+---
+- name: Include kernel security tasks
+  ansible.builtin.import_tasks: kernel.yml
+  tags: [security, kernel]
+
+- name: Include SSH hardening tasks
+  ansible.builtin.import_tasks: ssh.yml
+  tags: [security, ssh]
+
+- name: Include firewall configuration tasks
+  ansible.builtin.import_tasks: firewall.yml
+  tags: [security, firewall]
+
+- name: Include audit daemon configuration tasks
+  ansible.builtin.import_tasks: auditd.yml
+  when: security_auditd_enabled
+  tags: [security, audit]
+
+- name: Include file integrity monitoring tasks
+  ansible.builtin.import_tasks: aide.yml
+  when: security_aide_enabled
+  tags: [security, aide]
+
+- name: Include PAM security tasks
+  ansible.builtin.import_tasks: pam.yml
+  tags: [security, authentication]
+
+- name: Include compliance tasks
+  ansible.builtin.import_tasks: compliance/main.yml
+  when: security_compliance_standards | length > 0
+  tags: [security, compliance]

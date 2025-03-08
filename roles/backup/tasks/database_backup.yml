@@ -1,0 +1,72 @@
+---
+- name: Create MySQL backup script
+  ansible.builtin.template:
+    src: templates/mysql_backup.sh.j2
+    dest: "{{ backup_base_dir }}/scripts/mysql_backup.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  when: backup_databases.mysql.enabled
+  tags: [backup, database, mysql]
+
+- name: Create PostgreSQL backup script
+  ansible.builtin.template:
+    src: templates/postgresql_backup.sh.j2
+    dest: "{{ backup_base_dir }}/scripts/postgresql_backup.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  when: backup_databases.postgresql.enabled
+  tags: [backup, database, postgresql]
+
+- name: Create database backup cleanup script
+  ansible.builtin.template:
+    src: templates/cleanup.sh.j2
+    dest: "{{ backup_base_dir }}/scripts/database_cleanup.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  tags: [backup, database, cleanup]
+
+- name: Set up MySQL backup cron job
+  ansible.builtin.cron:
+    name: "MySQL database backup"
+    job: >-
+      {{ backup_base_dir }}/scripts/mysql_backup.sh >> \
+      {{ backup_base_dir }}/logs/mysql_backup.log 2>&1
+    minute: "{{ backup_schedule.databases.cron.split(' ')[0] }}"
+    hour: "{{ backup_schedule.databases.cron.split(' ')[1] }}"
+    day: "{{ backup_schedule.databases.cron.split(' ')[2] }}"
+    month: "{{ backup_schedule.databases.cron.split(' ')[3] }}"
+    weekday: "{{ backup_schedule.databases.cron.split(' ')[4] }}"
+    user: "{{ backup_user }}"
+  when: backup_databases.mysql.enabled
+  tags: [backup, database, mysql, cron]
+
+- name: Set up PostgreSQL backup cron job
+  ansible.builtin.cron:
+    name: "PostgreSQL database backup"
+    job: "{{ backup_base_dir }}/scripts/postgresql_backup.sh >> {{ backup_base_dir }}/logs/postgresql_backup.log 2>&1"
+    # Offset by 15 minutes
+    minute: "{{ backup_schedule.databases.cron.split(' ')[0] | int + 15 }}"
+    hour: "{{ backup_schedule.databases.cron.split(' ')[1] }}"
+    day: "{{ backup_schedule.databases.cron.split(' ')[2] }}"
+    month: "{{ backup_schedule.databases.cron.split(' ')[3] }}"
+    weekday: "{{ backup_schedule.databases.cron.split(' ')[4] }}"
+    user: "{{ backup_user }}"
+  when: backup_databases.postgresql.enabled
+  tags: [backup, database, postgresql, cron]
+
+- name: Set up database backup cleanup cron job
+  ansible.builtin.cron:
+    name: "Database backup cleanup"
+    job: >-
+      {{ backup_base_dir }}/scripts/database_cleanup.sh databases {{ backup_schedule.databases.retention }} >>
+      {{ backup_base_dir }}/logs/database_cleanup.log 2>&1
+    minute: "30"
+    hour: "{{ backup_schedule.databases.cron.split(' ')[1] }}"
+    day: "{{ backup_schedule.databases.cron.split(' ')[2] }}"
+    month: "{{ backup_schedule.databases.cron.split(' ')[3] }}"
+    weekday: "{{ backup_schedule.databases.cron.split(' ')[4] }}"
+    user: "{{ backup_user }}"
+  tags: [backup, database, cron, cleanup]

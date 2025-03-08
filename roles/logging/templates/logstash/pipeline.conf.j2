@@ -1,0 +1,87 @@
+input {
+  beats {
+    port => 5044
+  }
+}
+
+filter {
+  if [fields][log_source] == "system" {
+    if [log][file][path] =~ "auth.log" {
+      grok {
+        match => { "message" => "%{SYSLOGBASE} %{GREEDYDATA:system.auth.message}" }
+      }
+      mutate {
+        add_field => { "[@metadata][index]" => "system-auth-%{+YYYY.MM}" }
+      }
+    } else if [log][file][path] =~ "syslog" {
+      grok {
+        match => { "message" => "%{SYSLOGBASE} %{GREEDYDATA:system.syslog.message}" }
+      }
+      mutate {
+        add_field => { "[@metadata][index]" => "system-syslog-%{+YYYY.MM}" }
+      }
+    } else {
+      mutate {
+        add_field => { "[@metadata][index]" => "system-logs-%{+YYYY.MM}" }
+      }
+    }
+  }
+  
+  else if [fields][log_source] == "traefik" {
+    json {
+      source => "message"
+      target => "traefik"
+    }
+    date {
+      match => [ "[traefik][time]", "ISO8601" ]
+    }
+    mutate {
+      add_field => { "[@metadata][index]" => "traefik-%{+YYYY.MM}" }
+    }
+  }
+  
+  else if [fields][log_source] == "mailcow" {
+    if [log][file][path] =~ "mail.log" {
+      grok {
+        patterns_dir => ["/usr/share/logstash/config/patterns"]
+        match => { "message" => "%{MAILCOW_LOG}" }
+      }
+      date {
+        match => [ "timestamp", "MMM dd HH:mm:ss", "MMM  d HH:mm:ss" ]
+      }
+      mutate {
+        add_field => { "[@metadata][index]" => "mailcow-mail-%{+YYYY.MM}" }
+      }
+    } else {
+      mutate {
+        add_field => { "[@metadata][index]" => "mailcow-logs-%{+YYYY.MM}" }
+      }
+    }
+  }
+  
+  else if [fields][log_source] == "docker" {
+    json {
+      source => "message"
+      target => "docker"
+    }
+    mutate {
+      add_field => { "[@metadata][index]" => "docker-%{+YYYY.MM}" }
+    }
+  }
+  
+  else {
+    mutate {
+      add_field => { "[@metadata][index]" => "logs-%{+YYYY.MM.dd}" }
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["elasticsearch:9200"]
+    user => "{{ logging_elastic_user }}"
+    password => "{{ logging_elastic_password }}"
+    index => "%{[@metadata][index]}"
+    ssl_certificate_verification => false
+  }
+}

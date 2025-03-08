@@ -1,0 +1,23 @@
+---
+# Vault-encrypted passwords and secrets - use ansible-vault to create
+vault_root_setup_pass: "secure_password_hash_here"
+vault_traefik_dashboard_auth: "admin:hashed_password_here"
+
+# Mailcow database passwords
+vault_mailcow_dbpass: "secure_db_password_here"
+vault_mailcow_dbroot: "secure_root_password_here"
+vault_mailcow_redispass: "secure_redis_password_here"
+
+# Monitoring credentials
+vault_monitoring_prometheus_auth: "admin:hashed_password_here"
+vault_monitoring_alertmanager_auth: "admin:hashed_password_here"
+vault_monitoring_grafana_admin_password: "secure_admin_password_here"
+
+# Notification settings
+vault_monitoring_slack_webhook: "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
+vault_monitoring_smtp_smarthost: "mail.summitethic.europe:587"
+vault_monitoring_smtp_from: "alerts@summitethic.europe"
+vault_monitoring_smtp_username: "alerts@summitethic.europe"
+vault_monitoring_smtp_password: "secure_smtp_password_here"
+vault_monitoring_email_to: "admin@summitethic.europe"
+vault_monitoring_critical_email_to: "oncall@summitethic.europe"

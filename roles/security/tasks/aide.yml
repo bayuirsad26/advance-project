@@ -1,0 +1,45 @@
+---
+- name: Install aide package
+  ansible.builtin.apt:
+    name: aide
+    state: present
+    update_cache: true
+  tags: [security, aide]
+
+- name: Configure AIDE database
+  ansible.builtin.template:
+    src: templates/aide/aide.conf.j2
+    dest: /etc/aide/aide.conf
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [security, aide]
+
+- name: Initialize AIDE database if not exists
+  ansible.builtin.command: aide --init
+  args:
+    creates: /var/lib/aide/aide.db.new
+  register: aide_init
+  changed_when: aide_init.rc == 0
+  tags: [security, aide]
+
+- name: Set up AIDE cron job
+  ansible.builtin.cron:
+    name: AIDE integrity check
+    job: "/usr/bin/aide --check > /var/log/aide/aide.log 2>&1"
+    hour: "{{ security_aide_cron_schedule.split(' ')[1] }}"
+    minute: "{{ security_aide_cron_schedule.split(' ')[0] }}"
+    weekday: "{{ security_aide_cron_schedule.split(' ')[4] }}"
+    month: "{{ security_aide_cron_schedule.split(' ')[3] }}"
+    day: "{{ security_aide_cron_schedule.split(' ')[2] }}"
+    user: root
+  tags: [security, aide]
+
+- name: Ensure AIDE log directory exists
+  ansible.builtin.file:
+    path: /var/log/aide
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  tags: [security, aide]

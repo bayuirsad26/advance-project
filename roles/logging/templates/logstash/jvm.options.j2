@@ -1,0 +1,9 @@
+-Xms{{ logging_logstash_heap_size }}
+-Xmx{{ logging_logstash_heap_size }}
+
+-XX:+UseG1GC
+-XX:G1ReservePercent=25
+-XX:InitiatingHeapOccupancyPercent=30
+
+-Djava.awt.headless=true
+-Dfile.encoding=UTF-8

@@ -1,0 +1,43 @@
+---
+- name: Configure kernel security parameters
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    sysctl_file: /etc/sysctl.d/10-security.conf
+    reload: true
+  with_items: "{{ security_kernel_parameters }}"
+  tags: [security, kernel]
+
+- name: Ensure modprobe configurations directory exists
+  ansible.builtin.file:
+    path: /etc/modprobe.d
+    state: directory
+    mode: "0755"
+  tags: [security, kernel]
+
+- name: Disable unnecessary kernel modules
+  ansible.builtin.template:
+    src: templates/disable-modules.conf.j2
+    dest: /etc/modprobe.d/disable-modules.conf
+    owner: root
+    group: root
+    mode: "0644"
+  tags: [security, kernel]
+
+- name: Ensure specific modules are blacklisted
+  ansible.builtin.lineinfile:
+    path: /etc/modprobe.d/blacklist.conf
+    line: "blacklist {{ item }}"
+    create: true
+    mode: "0644"
+  loop:
+    - cramfs
+    - freevxfs
+    - jffs2
+    - hfs
+    - hfsplus
+    - squashfs
+    - udf
+    - usb-storage
+  tags: [security, kernel]

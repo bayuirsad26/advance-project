@@ -1,0 +1,47 @@
+# Enhanced SSH configuration for security
+# Managed by Ansible - DO NOT EDIT MANUALLY
+
+# Authentication settings
+PermitRootLogin {{ security_ssh_permit_root_login }}
+PasswordAuthentication {{ security_ssh_password_auth }}
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+MaxAuthTries {{ security_ssh_max_auth_tries }}
+
+# Protocol settings
+Protocol 2
+X11Forwarding {{ security_ssh_x11_forwarding }}
+AllowAgentForwarding {{ security_ssh_allow_agent_forwarding }}
+AllowTcpForwarding {{ security_ssh_allow_tcp_forwarding }}
+PermitTunnel no
+PermitUserEnvironment no
+MaxSessions {{ security_ssh_max_sessions }}
+
+# Cryptographic settings
+Ciphers {{ security_ssh_ciphers | join(',') }}
+KexAlgorithms {{ security_ssh_kex_algorithms | join(',') }}
+MACs {{ security_ssh_macs | join(',') }}
+
+# Logging settings
+SyslogFacility AUTH
+LogLevel VERBOSE
+
+# Session timing
+ClientAliveInterval 300
+ClientAliveCountMax 2
+LoginGraceTime 30
+
+# Additional security settings
+StrictModes yes
+UsePAM yes
+PrintMotd no
+PrintLastLog yes
+Banner /etc/issue.net
+
+{% if security_ssh_allowed_users is defined and security_ssh_allowed_users | length > 0 %}
+AllowUsers {{ security_ssh_allowed_users | join(' ') }}
+{% endif %}
+
+{% if security_ssh_allowed_groups is defined and security_ssh_allowed_groups | length > 0 %}
+AllowGroups {{ security_ssh_allowed_groups | join(' ') }}
+{% endif %}

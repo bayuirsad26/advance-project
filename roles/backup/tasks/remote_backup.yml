@@ -1,0 +1,36 @@
+---
+- name: Include S3 remote backup tasks
+  ansible.builtin.import_tasks: remote/s3.yml
+  when: backup_remote_type == 's3'
+  tags: [backup, remote, s3]
+
+- name: Include rsync remote backup tasks
+  ansible.builtin.import_tasks: remote/rsync.yml
+  when: backup_remote_type == 'rsync'
+  tags: [backup, remote, rsync]
+
+- name: Include rclone remote backup tasks
+  ansible.builtin.import_tasks: remote/rclone.yml
+  when: backup_remote_type == 'rclone'
+  tags: [backup, remote, rclone]
+
+- name: Create remote backup script
+  ansible.builtin.template:
+    src: templates/remote_backup.sh.j2
+    dest: "{{ backup_base_dir }}/scripts/remote_backup.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  tags: [backup, remote]
+
+- name: Set up remote backup cron job
+  ansible.builtin.cron:
+    name: "Remote backup sync"
+    job: "{{ backup_base_dir }}/scripts/remote_backup.sh >> {{ backup_base_dir }}/logs/remote_backup.log 2>&1"
+    minute: "0"
+    hour: "5"
+    day: "*"
+    month: "*"
+    weekday: "*"
+    user: "{{ backup_user }}"
+  tags: [backup, remote, cron]

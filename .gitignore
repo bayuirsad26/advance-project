@@ -1,0 +1,64 @@
+# Ansible
+*.retry
+*.pyc
+__pycache__/
+.ansible/
+.vault_pass
+.ansible_facts_cache/
+logs/
+
+# Environment
+.env
+*.env
+.env.*
+
+# Secrets
+*vault*
+!vault.yml.example
+id_*
+*.key
+*.pem
+*.pub
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+*.code-workspace
+.idea/
+*.swp
+*.swo
+*~
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfvars
+
+# Testing
+.molecule/
+.pytest_cache/
+
+# Build outputs
+build/
+dist/
+
+# Collections directory
+collections/
+
+# Inventory files except examples
+/inventories/**/inventory.yml
+!/inventories/**/inventory.yml.example
+
+# Group vars except examples
+/inventories/**/group_vars/*
+!/inventories/**/group_vars/*.example

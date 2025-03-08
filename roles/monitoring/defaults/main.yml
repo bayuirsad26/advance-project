@@ -1,0 +1,64 @@
+---
+# General monitoring settings
+monitoring_enabled: "{{ monitoring.enabled | default(true) }}"
+monitoring_domain: "{{ monitoring.domain | default(inventory_hostname) }}"
+monitoring_base_dir: "/opt/monitoring"
+
+# Docker settings
+monitoring_network_name: "monitoring-network"
+
+# Authentication (should be override with vault values in production)
+monitoring_prometheus_auth: >-
+  {{ vault_monitoring_prometheus_auth | default('admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/') }}
+monitoring_alertmanager_auth: >-
+  {{ vault_monitoring_alertmanager_auth | default('admin:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/') }}
+monitoring_grafana_admin_password: "{{ vault_monitoring_grafana_admin_password | default('admin') }}"
+# Version settings
+monitoring_prometheus_version: "v2.42.0"
+monitoring_alertmanager_version: "v0.25.0"
+monitoring_node_exporter_version: "v1.5.0"
+monitoring_cadvisor_version: "v0.47.0"
+monitoring_grafana_version: "9.4.7"
+
+# Prometheus settings
+monitoring_prometheus_config_dir: "{{ monitoring_base_dir }}/prometheus/config"
+monitoring_prometheus_data_dir: "{{ monitoring_base_dir }}/prometheus/data"
+# nobody
+monitoring_prometheus_user: "65534"
+# nogroup
+monitoring_prometheus_group: "65534"
+monitoring_prometheus_retention: "{{ monitoring.prometheus_retention | default('30d') }}"
+
+# Alertmanager settings
+monitoring_alertmanager_config_dir: "{{ monitoring_base_dir }}/alertmanager/config"
+monitoring_alertmanager_data_dir: "{{ monitoring_base_dir }}/alertmanager/data"
+# nobody
+monitoring_alertmanager_user: "65534"
+# nogroup
+monitoring_alertmanager_group: "65534"
+
+# Grafana settings
+monitoring_grafana_config_dir: "{{ monitoring_base_dir }}/grafana/config"
+monitoring_grafana_data_dir: "{{ monitoring_base_dir }}/grafana/data"
+# grafana
+monitoring_grafana_user: "472"
+# grafana
+monitoring_grafana_group: "472"
+monitoring_grafana_smtp_enabled: "{{ monitoring.email_notifications | default('false') }}"
+
+# External service connection settings
+monitoring_monitor_mailcow: true
+monitoring_monitor_traefik: true
+
+# Notification channels
+# Slack (override with vault in production)
+monitoring_slack_webhook: "{{ vault_monitoring_slack_webhook | default('') }}"
+monitoring_slack_enabled: "{{ monitoring.slack_notifications | default(false) }}"
+
+# Email notification (override with vault in production)
+monitoring_smtp_smarthost: "{{ vault_monitoring_smtp_smarthost | default('') }}"
+monitoring_smtp_from: "{{ vault_monitoring_smtp_from | default('') }}"
+monitoring_smtp_username: "{{ vault_monitoring_smtp_username | default('') }}"
+monitoring_smtp_password: "{{ vault_monitoring_smtp_password | default('') }}"
+monitoring_email_to: "{{ vault_monitoring_email_to | default('') }}"
+monitoring_critical_email_to: "{{ vault_monitoring_critical_email_to | default('') }}"

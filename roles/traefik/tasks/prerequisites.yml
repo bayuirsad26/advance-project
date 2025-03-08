@@ -1,0 +1,33 @@
+---
+- name: Ensure necessary packages are installed
+  ansible.builtin.apt:
+    name:
+      - docker-compose-plugin
+      - python3-requests
+    state: present
+    update_cache: true
+  tags: [traefik, prerequisites]
+
+- name: Create Traefik directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  loop:
+    - "{{ traefik_base_dir }}"
+    - "{{ traefik_config_dir }}"
+    - "{{ traefik_data_dir }}"
+    - "{{ traefik_letsencrypt_dir }}"
+    - "{{ traefik_log_dir }}"
+  tags: [traefik, prerequisites]
+
+- name: Ensure firewall allows Traefik ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item | regex_replace(':.*$', '') }}"
+    proto: tcp
+  loop: "{{ traefik_ports }}"
+  when: "'ufw' in ansible_facts.packages"
+  tags: [traefik, prerequisites, firewall]

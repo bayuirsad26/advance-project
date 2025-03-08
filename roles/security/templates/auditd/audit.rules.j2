@@ -1,0 +1,40 @@
+# This file contains the auditctl rules that are loaded
+# whenever the audit daemon is started
+
+# Delete all previous rules
+-D
+
+# Set buffer size
+-b 8192
+
+# Failure mode: 1=silent 2=printk
+-f 1
+
+# System call auditing
+## Successful and unsuccessful attempts to access files
+-a always,exit -F arch=b64 -S open,openat,open_by_handle_at -F exit=-EACCES -k access
+-a always,exit -F arch=b64 -S open,openat,open_by_handle_at -F exit=-EPERM -k access
+
+## Watch for changes to user/group info
+-w /etc/group -p wa -k identity
+-w /etc/passwd -p wa -k identity
+-w /etc/shadow -p wa -k identity
+
+## Watch for changes to network configuration
+-w /etc/hosts -p wa -k system-locale
+-w /etc/network/ -p wa -k system-locale
+
+## Watch for changes to system time
+-a always,exit -F arch=b64 -S adjtimex,settimeofday -k time-change
+-a always,exit -F arch=b64 -S clock_settime -k time-change
+-w /etc/localtime -p wa -k time-change
+
+## Privilege escalation monitoring
+-w /bin/su -p x -k priv_esc
+-w /usr/bin/sudo -p x -k priv_esc
+-w /etc/sudoers -p wa -k priv_esc
+-w /etc/sudoers.d/ -p wa -k priv_esc
+
+{% for rule in security_auditd_rules %}
+{{ rule }}
+{% endfor %}

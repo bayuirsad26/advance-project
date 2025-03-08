@@ -1,0 +1,54 @@
+---
+- name: Include prerequisites tasks
+  ansible.builtin.import_tasks: prerequisites.yml
+  tags: [monitoring, prerequisites]
+
+- name: Create monitoring network
+  community.docker.docker_network:
+    name: "{{ monitoring_network_name }}"
+    driver: bridge
+    state: present
+  become: true
+  tags: [monitoring, docker]
+
+- name: Include Prometheus tasks
+  ansible.builtin.import_tasks: prometheus/main.yml
+  tags: [monitoring, prometheus]
+
+- name: Include Grafana tasks
+  ansible.builtin.import_tasks: grafana/main.yml
+  tags: [monitoring, grafana]
+
+- name: Include Alertmanager tasks
+  ansible.builtin.import_tasks: alertmanager/main.yml
+  tags: [monitoring, alertmanager]
+
+- name: Template Docker Compose file
+  ansible.builtin.template:
+    src: templates/docker-compose.monitoring.yml.j2
+    dest: "{{ monitoring_base_dir }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [monitoring, template]
+
+- name: Deploy monitoring stack with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ monitoring_base_dir }}"
+    state: present
+    pull: "always"
+  become: true
+  tags: [monitoring, deploy]
+
+- name: Check monitoring service status
+  ansible.builtin.command: >
+    docker ps --filter "name=prometheus|grafana|alertmanager"
+    --format "{{ '{{.Names}} - {{.Status}}' }}"
+  register: monitoring_status
+  changed_when: false
+  tags: [monitoring, status]
+
+- name: Display monitoring service status
+  ansible.builtin.debug:
+    var: monitoring_status.stdout_lines
+  tags: [monitoring, status]

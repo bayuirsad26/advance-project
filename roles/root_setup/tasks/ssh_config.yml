@@ -1,0 +1,47 @@
+---
+- name: Backup original sshd_config
+  ansible.builtin.copy:
+    src: /etc/ssh/sshd_config
+    dest: /etc/ssh/sshd_config.bak
+    remote_src: true
+    mode: "0600"
+  when: root_setup_backup_sshd_config
+  tags: [bootstrap, ssh]
+
+- name: Configure SSH to disable root login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PermitRootLogin"
+    line: "PermitRootLogin {{ root_setup_permit_root_login }}"
+    state: present
+  notify: Restart SSH
+  tags: [bootstrap, ssh]
+
+- name: Configure SSH to disable password authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication {{ root_setup_password_auth }}"
+    state: present
+  notify: Restart SSH
+  tags: [bootstrap, ssh]
+
+- name: Create SSH warning banner
+  ansible.builtin.copy:
+    content: "{{ root_setup_ssh_banner_text }}"
+    dest: /etc/issue.net
+    owner: root
+    group: root
+    mode: "0644"
+  when: root_setup_ssh_banner_enable
+  tags: [bootstrap, ssh, banner]
+
+- name: Enable SSH banner
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?Banner"
+    line: "Banner /etc/issue.net"
+    state: present
+  when: root_setup_ssh_banner_enable
+  notify: Restart SSH
+  tags: [bootstrap, ssh, banner]

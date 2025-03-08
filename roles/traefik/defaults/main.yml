@@ -1,0 +1,54 @@
+---
+traefik_image: traefik:v2.9
+traefik_domain: "{{ domain }}"
+traefik_dashboard_auth: "{{ vault_traefik_dashboard_auth }}"
+
+# ACME configuration
+traefik_acme_email: "{{ traefik.acme_email | default('admin@example.com') }}"
+traefik_acme_storage: "/letsencrypt/acme.json"
+# Options: tlsChallenge, httpChallenge, dnsChallenge
+traefik_acme_challenge_type: "tlsChallenge"
+
+# Traefik directories
+traefik_base_dir: "/opt/traefik"
+traefik_config_dir: "{{ traefik_base_dir }}/config"
+traefik_data_dir: "{{ traefik_base_dir }}/data"
+traefik_letsencrypt_dir: "{{ traefik_base_dir }}/letsencrypt"
+traefik_log_dir: "{{ traefik_base_dir }}/logs"
+
+# Traefik command line arguments
+traefik_command:
+  - "--providers.docker"
+  - "--providers.docker.network={{ traefik_public_network }}"
+  - "--providers.file.directory={{ traefik_config_dir }}"
+  - "--entrypoints.web.address=:80"
+  - "--entrypoints.websecure.address=:443"
+  - "--certificatesresolvers.myresolver.acme.{{ traefik_acme_challenge_type }}=true"
+  - "--certificatesresolvers.myresolver.acme.email={{ traefik_acme_email }}"
+  - "--certificatesresolvers.myresolver.acme.storage={{ traefik_acme_storage }}"
+  - "--api.dashboard=true"
+  - "--accesslog=true"
+  - "--accesslog.filepath={{ traefik_log_dir }}/access.log"
+  - "--log=true"
+  - "--log.filepath={{ traefik_log_dir }}/traefik.log"
+  - "--metrics.prometheus=true"
+  - "--metrics.prometheus.entrypoint=metrics"
+  - "--entrypoints.metrics.address=:8082"
+
+# Traefik ports to expose
+traefik_ports:
+  - "80:80"
+  - "443:443"
+
+# Traefik volumes to mount
+traefik_volumes:
+  - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  - "{{ traefik_letsencrypt_dir }}:/letsencrypt"
+  - "{{ traefik_config_dir }}:/etc/traefik/config"
+  - "{{ traefik_log_dir }}:/logs"
+
+# Traefik network
+traefik_public_network: traefik-public
+
+# Additional dynamic configurations
+traefik_dynamic_configs: []

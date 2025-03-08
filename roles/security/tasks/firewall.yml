@@ -1,0 +1,36 @@
+---
+- name: Install firewall package
+  ansible.builtin.apt:
+    name: "{{ security_firewall_service }}"
+    state: present
+    update_cache: true
+  tags: [security, firewall]
+
+- name: Check UFW status
+  ansible.builtin.command: ufw status
+  register: ufw_status
+  changed_when: false
+  tags: [security, firewall]
+
+- name: Set UFW default policies
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - { direction: incoming, policy: deny }
+    - { direction: outgoing, policy: allow }
+  tags: [security, firewall]
+
+- name: Configure UFW rules
+  community.general.ufw:
+    rule: "{{ item.rule }}"
+    port: "{{ item.port }}"
+    proto: "{{ item.proto }}"
+  loop: "{{ security_firewall_rules }}"
+  tags: [security, firewall]
+
+- name: Enable UFW if inactive
+  community.general.ufw:
+    state: enabled
+  when: "'inactive' in ufw_status.stdout"
+  tags: [security, firewall]

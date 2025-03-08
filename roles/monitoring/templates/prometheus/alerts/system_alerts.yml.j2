@@ -1,0 +1,52 @@
+groups:
+- name: system
+  rules:
+  # Alert for high CPU load
+  - alert: HighCPULoad
+    expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High CPU load (instance {{ $labels.instance }})"
+      description: "CPU load is > 80%\n  VALUE = {{ $value }}%\n  LABELS = {{ $labels }}"
+
+  # Alert for high memory usage
+  - alert: HighMemoryLoad
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High memory usage (instance {{ $labels.instance }})"
+      description: "Memory usage is > 80%\n  VALUE = {{ $value }}%\n  LABELS = {{ $labels }}"
+
+  # Alert for high disk usage
+  - alert: HighDiskUsage
+    expr: (node_filesystem_size_bytes{fstype!="tmpfs"} - node_filesystem_free_bytes{fstype!="tmpfs"}) / node_filesystem_size_bytes{fstype!="tmpfs"} * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High disk usage (instance {{ $labels.instance }})"
+      description: "Disk usage is > 80%\n  VALUE = {{ $value }}%\n  LABELS = {{ $labels }}"
+
+  # Alert for node down
+  - alert: InstanceDown
+    expr: up == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Instance down (instance {{ $labels.instance }})"
+      description: "Instance has been down for more than 5 minutes.\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"
+
+  # Alert for high system load
+  - alert: HighLoad
+    expr: node_load1 > (count by (instance) (node_cpu_seconds_total{mode="idle"}) * 0.8)
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High system load (instance {{ $labels.instance }})"
+      description: "System load is high\n  VALUE = {{ $value }}\n  LABELS = {{ $labels }}"

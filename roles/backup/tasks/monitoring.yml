@@ -1,0 +1,33 @@
+---
+- name: Check if monitoring is enabled
+  ansible.builtin.stat:
+    path: /opt/monitoring
+  register: monitoring_dir
+  tags: [backup, monitoring]
+
+- name: Configure backup metrics
+  ansible.builtin.copy:
+    dest: "/etc/cron.d/backup-monitoring"
+    content: |
+      # Generate backup metrics for monitoring
+      0 * * * * {{ backup_user }} /usr/bin/find {{ backup_base_dir }} -name "*.tar.gz" -type f -mtime -1 \
+        -printf "%TY-%Tm-%Td %TH:%TM:%TS %s %p\n" > /opt/monitoring/backup_status.txt
+    owner: root
+    group: root
+    mode: "0644"
+  when: monitoring_dir.stat.exists and backup_enabled
+  tags: [backup, monitoring]
+
+- name: Create backup dashboard in Grafana
+  ansible.builtin.copy:
+    src: files/backup-dashboard.json
+    dest: >-
+      {{ monitoring_grafana_config_dir | default('/opt/monitoring/grafana/config') }}/
+      provisioning/dashboards/backup-dashboard.json
+    owner: "{{ monitoring_grafana_user | default(ansible_user) }}"
+    group: "{{ monitoring_grafana_group | default(ansible_user) }}"
+    mode: "0644"
+  when: monitoring_dir.stat.exists and backup_enabled
+  tags: [backup, monitoring, dashboard]
+  # Don't fail if Grafana isn't set up
+  failed_when: false

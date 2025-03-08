@@ -1,0 +1,16 @@
+# Global owners
+*       @SummitEthic/devops-team
+
+# CI/CD workflow owners
+.github/workflows/  @SummitEthic/devops-lead
+
+# Security role owners
+roles/security/     @SummitEthic/security-team
+
+# Infrastructure roles
+roles/common/       @SummitEthic/infrastructure-team
+roles/user_setup/   @SummitEthic/infrastructure-team
+roles/traefik/      @SummitEthic/infrastructure-team
+
+# Application roles
+roles/mailcow/      @SummitEthic/app-team

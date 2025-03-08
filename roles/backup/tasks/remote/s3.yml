@@ -1,0 +1,42 @@
+---
+- name: Ensure AWS CLI is installed
+  ansible.builtin.pip:
+    name: awscli
+    state: present
+  tags: [backup, remote, s3]
+
+- name: Create AWS credentials directory
+  ansible.builtin.file:
+    path: "~{{ backup_user }}/.aws"
+    state: directory
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0700"
+  tags: [backup, remote, s3]
+
+- name: Configure AWS credentials
+  ansible.builtin.template:
+    src: templates/aws_credentials.j2
+    dest: "~{{ backup_user }}/.aws/credentials"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0600"
+  tags: [backup, remote, s3]
+
+- name: Configure AWS config
+  ansible.builtin.template:
+    src: templates/aws_config.j2
+    dest: "~{{ backup_user }}/.aws/config"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0600"
+  tags: [backup, remote, s3]
+
+- name: Create S3 backup script
+  ansible.builtin.template:
+    src: templates/s3_sync.sh.j2
+    dest: "{{ backup_base_dir }}/scripts/s3_sync.sh"
+    owner: "{{ backup_user }}"
+    group: "{{ backup_group }}"
+    mode: "0750"
+  tags: [backup, remote, s3]

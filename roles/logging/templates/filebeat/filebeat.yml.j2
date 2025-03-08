@@ -1,0 +1,73 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: true
+
+filebeat.inputs:
+  - type: log
+    enabled: true
+    fields:
+      log_source: system
+    paths:
+      - /var/log/auth.log
+      - /var/log/syslog
+      - /var/log/daemon.log
+    exclude_files: ['\.gz$']
+
+{% if logging_collect_traefik_logs %}
+  - type: log
+    enabled: true
+    fields:
+      log_source: traefik
+    paths:
+      - /var/log/traefik/access.log
+      - /var/log/traefik/traefik.log
+    json.keys_under_root: true
+    json.add_error_key: true
+{% endif %}
+
+{% if logging_collect_mailcow_logs %}
+  - type: log
+    enabled: true
+    fields:
+      log_source: mailcow
+    paths:
+      - /var/log/mailcow/mail.log
+      - /var/log/mailcow/dovecot.log
+      - /var/log/mailcow/postfix.log
+    exclude_files: ['\.gz$']
+{% endif %}
+
+{% if logging_collect_docker_logs %}
+  - type: container
+    enabled: true
+    fields:
+      log_source: docker
+    paths:
+      - /var/lib/docker/containers/*/*.log
+    json.keys_under_root: true
+    json.add_error_key: true
+    json.message_key: log
+{% endif %}
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+monitoring.enabled: true
+monitoring.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  username: "{{ logging_elastic_user }}"
+  password: "{{ logging_elastic_password }}"
+
+setup.kibana:
+  host: "kibana:5601"
+  username: "{{ logging_elastic_user }}"
+  password: "{{ logging_elastic_password }}"
+
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644

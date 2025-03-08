@@ -1,0 +1,105 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:{{ logging_elasticsearch_version }}
+    container_name: elasticsearch
+    environment:
+      - cluster.name={{ logging_elasticsearch_cluster_name }}
+      - discovery.type={{ logging_elasticsearch_discovery_type }}
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms{{ logging_elasticsearch_heap_size }} -Xmx{{ logging_elasticsearch_heap_size }}"
+      - ELASTIC_PASSWORD={{ logging_elastic_password }}
+      - xpack.security.enabled=true
+      - xpack.security.authc.api_key.enabled=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - {{ logging_base_dir }}/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - {{ logging_base_dir }}/elasticsearch/jvm.options:/usr/share/elasticsearch/config/jvm.options:ro
+      - {{ logging_elasticsearch_data_dir }}:/usr/share/elasticsearch/data
+      - {{ logging_elasticsearch_backup_dir }}:/usr/share/elasticsearch/backup
+    ports:
+      - "127.0.0.1:{{ logging_elasticsearch_port }}:9200"
+    networks:
+      - {{ logging_network_name }}
+    restart: unless-stopped
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:{{ logging_logstash_version }}
+    container_name: logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xms{{ logging_logstash_heap_size }} -Xmx{{ logging_logstash_heap_size }}"
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USER={{ logging_elastic_user }}
+      - ELASTICSEARCH_PASSWORD={{ logging_elastic_password }}
+    volumes:
+      - {{ logging_logstash_config_dir }}:/usr/share/logstash/config:ro
+      - {{ logging_logstash_pipeline_dir }}:/usr/share/logstash/pipeline:ro
+    ports:
+      - "127.0.0.1:5044:5044"
+      - "127.0.0.1:9600:9600"
+    networks:
+      - {{ logging_network_name }}
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:{{ logging_kibana_version }}
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME={{ logging_elastic_user }}
+      - ELASTICSEARCH_PASSWORD={{ logging_elastic_password }}
+    volumes:
+      - {{ logging_base_dir }}/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - {{ logging_base_dir }}/kibana/saved_objects:/usr/share/kibana/saved_objects:ro
+    networks:
+      - {{ logging_network_name }}
+      - traefik-public
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.kibana.rule=Host(`kibana.{{ logging_domain }}`)"
+      - "traefik.http.routers.kibana.entrypoints=websecure"
+      - "traefik.http.routers.kibana.tls.certresolver=myresolver"
+      - "traefik.http.routers.kibana.middlewares=kibana-auth"
+      - "traefik.http.middlewares.kibana-auth.basicauth.users={{ logging_elastic_user }}:{{ logging_elastic_password | password_hash('apr_md5_crypt') }}"
+      - "traefik.http.services.kibana.loadbalancer.server.port=5601"
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:{{ logging_filebeat_version }}
+    container_name: filebeat
+    user: root
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME={{ logging_elastic_user }}
+      - ELASTICSEARCH_PASSWORD={{ logging_elastic_password }}
+      - KIBANA_HOSTS=http://kibana:5601
+    volumes:
+      - {{ logging_filebeat_config_dir }}:/usr/share/filebeat/config:ro
+      - {{ logging_filebeat_data_dir }}:/usr/share/filebeat/data
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      {% if logging_collect_traefik_logs %}
+      - {{ traefik_log_dir }}:/var/log/traefik:ro
+      {% endif %}
+      {% if logging_collect_mailcow_logs %}
+      - {{ mailcow_dest }}/data/logs:/var/log/mailcow:ro
+      {% endif %}
+    networks:
+      - {{ logging_network_name }}
+    restart: unless-stopped
+    depends_on:
+      - elasticsearch
+      - kibana
+
+networks:
+  {{ logging_network_name }}:
+    driver: bridge
+  traefik-public:
+    external: true

@@ -1,0 +1,23 @@
+---
+- name: Template Filebeat configuration
+  ansible.builtin.template:
+    src: templates/filebeat/filebeat.yml.j2
+    dest: "{{ logging_filebeat_config_dir }}/filebeat.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [logging, filebeat, config]
+
+- name: Configure Filebeat modules
+  ansible.builtin.template:
+    src: "templates/filebeat/modules/{{ item }}.yml.j2"
+    dest: "{{ logging_filebeat_config_dir }}/modules.d/{{ item }}.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop:
+    - system
+    - traefik
+    - mailcow
+    - docker
+  tags: [logging, filebeat, modules]

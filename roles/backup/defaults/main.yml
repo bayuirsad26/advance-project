@@ -1,0 +1,87 @@
+---
+# General backup settings
+backup_enabled: true
+backup_base_dir: "/var/backups/summitethic"
+backup_user: "{{ ansible_user }}"
+backup_group: "{{ ansible_user }}"
+
+# Backup schedule
+backup_schedule:
+  system_config:
+    # Daily at 1 AM
+    cron: "0 1 * * *"
+    # Keep 14 days
+    retention: 14
+  databases:
+    # Daily at 2 AM
+    cron: "0 2 * * *"
+    # Keep 7 days
+    retention: 7
+  docker_volumes:
+    # Weekly on Sunday at 3 AM
+    cron: "0 3 * * 0"
+    # Keep 4 weeks
+    retention: 4
+  full_backup:
+    # Monthly on 1st at 4 AM
+    cron: "0 4 1 * *"
+    # Keep 3 months
+    retention: 3
+
+# Directories to backup
+backup_system_dirs:
+  - path: /etc
+    exclude: []
+  - path: /opt
+    exclude: ["*/data/*", "*/logs/*"]
+  - path: /root
+    exclude: []
+  - path: /home
+    exclude: ["*/Downloads/*", "*/tmp/*"]
+
+# Docker volumes to backup
+backup_docker_volumes: true
+backup_exclude_volumes:
+  - "*_cache"
+  - "*_tmp"
+
+# Database backup settings
+backup_databases:
+  mysql:
+    enabled: true
+    host: localhost
+    user: "{{ backup_mysql_user | default('root') }}"
+    password: "{{ backup_mysql_password | default('') }}"
+    # Empty means all databases
+    databases: []
+  postgresql:
+    enabled: false
+    host: localhost
+    user: "{{ backup_postgresql_user | default('postgres') }}"
+    password: "{{ backup_postgresql_password | default('') }}"
+    # Empty means all databases
+    databases: []
+
+# Remote backup settings
+backup_remote_enabled: false
+# Options: s3, rsync, rclone
+backup_remote_type: "s3"
+# Days to keep backups remotely
+backup_remote_retention: 30
+
+# S3 specific settings
+backup_s3_bucket: "{{ backup_s3_bucket_name | default('') }}"
+backup_s3_prefix: "{{ inventory_hostname }}"
+backup_s3_region: "{{ backup_s3_region_name | default('us-east-1') }}"
+backup_s3_access_key: "{{ vault_backup_s3_access_key | default('') }}"
+backup_s3_secret_key: "{{ vault_backup_s3_secret_key | default('') }}"
+
+# rsync specific settings
+backup_rsync_host: "{{ backup_rsync_hostname | default('') }}"
+backup_rsync_user: "{{ backup_rsync_username | default('') }}"
+backup_rsync_path: "{{ backup_rsync_directory | default('') }}"
+backup_rsync_key: "{{ vault_backup_rsync_key | default('') }}"
+
+# Encryption settings
+backup_encrypt: false
+backup_encryption_password: "{{ vault_backup_encryption_password | default('') }}"

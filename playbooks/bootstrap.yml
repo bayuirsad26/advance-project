@@ -1,0 +1,34 @@
+---
+- name: "Bootstrap - Initial System Setup"
+  hosts: all
+  remote_user: root
+  gather_facts: true
+  become: true
+  vars_files:
+    - "{{ inventory_dir }}/group_vars/vault.yml"
+  tags:
+    - bootstrap
+
+  pre_tasks:
+    - name: Check connectivity and Python
+      ansible.builtin.ping:
+      tags: [always]
+
+    - name: Gather minimal facts
+      ansible.builtin.setup:
+        gather_subset:
+          - "!all"
+          - "!any"
+          - "distribution"
+          - "system"
+      tags: [always]
+
+    - name: Verify supported distribution
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution in ['Debian', 'Ubuntu']
+        msg: "This playbook only supports Debian and Ubuntu distributions"
+      tags: [always]
+
+  roles:
+    - role: root_setup

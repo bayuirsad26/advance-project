@@ -1,0 +1,44 @@
+---
+- name: Template Docker Compose file
+  ansible.builtin.template:
+    src: templates/traefik-docker-compose.yml.j2
+    dest: "{{ traefik_base_dir }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [traefik, deploy]
+
+- name: Create default dynamic configuration
+  ansible.builtin.template:
+    src: templates/traefik-dynamic-conf.yml.j2
+    dest: "{{ traefik_config_dir }}/dynamic-conf.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  tags: [traefik, deploy]
+
+- name: Create custom dynamic configurations
+  ansible.builtin.template:
+    src: "templates/traefik-dynamic-{{ item.name }}.yml.j2"
+    dest: "{{ traefik_config_dir }}/dynamic-{{ item.name }}.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  loop: "{{ traefik_dynamic_configs }}"
+  when: traefik_dynamic_configs | length > 0
+  tags: [traefik, deploy]
+
+- name: Deploy Traefik using Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_base_dir }}"
+    state: present
+    pull: "always"
+  tags: [traefik, deploy]
+
+- name: Wait for Traefik to start
+  ansible.builtin.wait_for:
+    host: "127.0.0.1"
+    port: 80
+    timeout: 300
+    delay: 10
+  tags: [traefik, deploy]

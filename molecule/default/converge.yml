@@ -1,0 +1,21 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == 'Debian'
+
+  roles:
+    - role: common
+    - role: security
+      vars:
+        security_firewall_rules:
+          - { port: 22, proto: tcp, rule: allow }
+          - { port: 80, proto: tcp, rule: allow }
+          - { port: 443, proto: tcp, rule: allow }

@@ -4,7 +4,7 @@ global:
   scrape_timeout: 10s
 
   external_labels:
-    environment: {{ environment }}
+    environment: {{ deployment_environment }}
     monitor: 'summitethic-monitor'
 
 # Alertmanager configuration

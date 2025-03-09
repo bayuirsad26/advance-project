@@ -54,7 +54,6 @@ mailcow_config_overrides:
   - { key: "SKIP_LETS_ENCRYPT", value: "y" }
   - { key: "SSL_TYPE", value: "manual" }
   - { key: "SKIP_SOGO", value: "n" }
-  - { key: "SKIP_SOLR", value: "y" }
   - { key: "SKIP_CLAMD", value: "n" }
   - { key: "SKIP_DOCKERAPI", value: "n" }
   - { key: "LOG_LINES", value: "500" }

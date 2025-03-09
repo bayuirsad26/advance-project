@@ -22,14 +22,6 @@
     seconds: 10
   tags: [mailcow, deploy]
 
-- name: Run the dovecot fix script
-  ansible.builtin.command:
-    cmd: "{{ mailcow_dest }}/fix-dovecot.sh"
-  register: fix_result
-  changed_when: fix_result.rc == 0
-  failed_when: false
-  tags: [mailcow, deploy, fix]
-
 - name: Wait for Mailcow to be fully operational
   ansible.builtin.wait_for:
     host: 127.0.0.1

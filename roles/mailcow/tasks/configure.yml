@@ -8,7 +8,6 @@
     mode: "0755"
   loop:
     - "{{ mailcow_dest }}/data/conf/postfix/custom"
-    - "{{ mailcow_dest }}/data/conf/dovecot/extra"
     - "{{ mailcow_dest }}/data/conf/rspamd/custom"
     - "{{ mailcow_dest }}/data/conf/nginx"
     - "{{ mailcow_dest }}/data/conf/fail2ban"

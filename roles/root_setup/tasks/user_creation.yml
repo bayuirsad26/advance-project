@@ -6,7 +6,7 @@
     groups: sudo
     append: true
     create_home: true
-    password: "{{ root_setup_password_hash }}"
+    password: "{{ root_setup_password_hash | default(vault_root_setup_pass) }}"
   register: admin_user_created
   tags: [bootstrap, user]
 
@@ -21,10 +21,9 @@
 
 - name: Check if public key file exists locally
   ansible.builtin.stat:
-    path: >-
-      {{ playbook_dir + '/../' + root_setup_admin_public_key if root_setup_admin_public_key.startswith('/')
-      else root_setup_admin_public_key }}
+    path: "{{ ssh_public_key_path | default(root_setup_admin_public_key) }}"
   delegate_to: localhost
+  become: false
   register: public_key_file
   tags: [bootstrap, ssh]
 
@@ -32,7 +31,7 @@
   ansible.posix.authorized_key:
     user: "{{ root_setup_admin_user }}"
     state: present
-    key: "{{ lookup('template', 'public_key.j2') }}"
+    key: "{{ lookup('file', ssh_public_key_path | default(root_setup_admin_public_key)) }}"
   when: public_key_file.stat.exists
   register: user_key_added
   tags: [bootstrap, ssh]

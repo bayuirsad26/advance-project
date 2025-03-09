@@ -66,7 +66,7 @@ This repository contains the enhanced Ansible infrastructure codebase for Summit
 6. **Bootstrap a new server**
 
    ```bash
-   make bootstrap INVENTORY=production
+   make bootstrap INVENTORY=production ANSIBLE_ARGS="-e 'ansible_user=root'"
    ```
 
 7. **Deploy the full infrastructure**
@@ -149,14 +149,14 @@ For more detailed troubleshooting, see the [Troubleshooting Guide](docs/troubles
 
 ## Documentation
 
-- [Contributing Guide](docs/CONTRIBUTING.md) - How to contribute to this project
+- [Contributing Guide](CONTRIBUTING.md) - How to contribute to this project
 - [Inventory Guide](docs/inventory-guide.md) - Detailed explanation of inventory structure
 - [Security Practices](docs/security-practices.md) - Overview of security hardening measures
 - [Linting Guide](docs/linting-guide.md) - Standards and fixes for code quality
 
 ## Contributing
 
-Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for guidelines on how to contribute to this project.
+Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
 
 ## Security
 

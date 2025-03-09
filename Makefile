@@ -21,19 +21,19 @@ test:
 
 # Playbook execution
 deploy:
-	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/site.yml --tags=$(TAGS) --limit=$(LIMIT) --ask-vault-pass
+	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/site.yml --tags=$(TAGS) --limit=$(LIMIT)
 
 bootstrap:
-	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/bootstrap.yml --limit=$(LIMIT) --ask-vault-pass
+	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/bootstrap.yml --limit=$(LIMIT) $(ANSIBLE_ARGS)
 
 security:
-	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/security.yml --limit=$(LIMIT) --ask-vault-pass
+	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/security.yml --limit=$(LIMIT)
 
 monitoring:
-	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/monitoring.yml --limit=$(LIMIT) --ask-vault-pass
+	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/monitoring.yml --limit=$(LIMIT)
 
 maintenance:
-	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/maintenance.yml --limit=$(LIMIT) --ask-vault-pass
+	ansible-playbook -i inventories/$(INVENTORY)/inventory.yml playbooks/maintenance.yml --limit=$(LIMIT)
 
 # Utility functions
 inventory-report:

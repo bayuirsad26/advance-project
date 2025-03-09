@@ -23,10 +23,15 @@
 
 - name: Configure UFW rules
   community.general.ufw:
-    rule: "{{ item.rule }}"
+    rule: "{{ item.rule | default('allow') }}"
     port: "{{ item.port }}"
-    proto: "{{ item.proto }}"
-  loop: "{{ security_firewall_rules }}"
+    proto: "{{ item.proto | default('tcp') }}"
+  loop: >
+    {% if security.firewall is defined and security.firewall.rules is defined %}
+    {{ security.firewall.rules }}
+    {% else %}
+    {{ security_firewall_rules }}
+    {% endif %}
   tags: [security, firewall]
 
 - name: Enable UFW if inactive

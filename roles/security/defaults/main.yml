@@ -62,10 +62,22 @@ security_auditd_rules:
 
 # Firewall rules
 security_firewall_service: "ufw"
-security_firewall_rules: >-
-  {{ security.firewall.rules | default([{port: 22, proto: tcp, rule: allow},
-  {port: 80, proto: tcp, rule: allow}, {port: 443, proto: tcp, rule: allow}]) }}
+security_firewall_rules:
+  - { port: 22, proto: tcp, rule: allow }
+  - { port: 80, proto: tcp, rule: allow }
+  - { port: 443, proto: tcp, rule: allow }
+  - { port: 9100, proto: tcp, rule: allow }
 
 # Compliance settings
 security_compliance_standards: "{{ security.compliance_standards | default(['cis']) }}"
 security_audit_only: false
+
+# Kernel module blacklist configuration
+security_blacklist_squashfs: true
+# Set to true if USB storage should be disabled
+security_blacklist_usb_storage: false
+security_blacklist_bluetooth: true
+security_blacklist_thunderbolt: true
+security_blacklist_pcmcia: true
+# Be careful with this setting
+security_restrict_kmod_loading: false

@@ -14,21 +14,3 @@
     group: "{{ ansible_user }}"
     mode: "0644"
   tags: [mailcow, integration]
-
-- name: Create fix-dovecot script
-  ansible.builtin.template:
-    src: templates/fix-dovecot.sh.j2
-    dest: "{{ mailcow_dest }}/fix-dovecot.sh"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0755"
-  tags: [mailcow, integration, fix]
-
-- name: Create custom Dovecot configuration
-  ansible.builtin.template:
-    src: templates/disable-fts.conf.j2
-    dest: "{{ mailcow_dest }}/data/conf/dovecot/extra/disable-fts.conf"
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: "0644"
-  tags: [mailcow, integration, fix]
